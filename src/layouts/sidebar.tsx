@@ -1,18 +1,7 @@
 import { APP_CONSTANTS } from "@/configs/app-constants";
+import { getNavigationItems } from "@/configs/navigation-config";
 import { authService } from "@/services/authService";
-import {
-	BarChart,
-	Calendar,
-	ClipboardCheck,
-	Cog,
-	Home,
-	UserPlus,
-	Users,
-	X,
-	FileText,
-	BookOpen,
-	Mail,
-} from "lucide-react";
+import { X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 interface SidebarProps {
@@ -23,36 +12,7 @@ interface SidebarProps {
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 	const currentUser = authService.getCurrentUser();
 	const isAdmin = currentUser?.role === "admin";
-
-	const navigation = [
-		{ name: "Home", href: "/admin/home", icon: Home },
-		{
-			name: "Dashboard",
-			href: isAdmin ? "/admin/dashboard" : "/teacher/dashboard",
-			icon: BarChart,
-		},
-		{ name: "Mark Attendance", href: "/admin/mark-attendance", icon: ClipboardCheck },
-		{
-			name: "Calendar",
-			href: isAdmin ? "/admin/calendar" : "/teacher/calendar",
-			icon: Calendar,
-		},
-		...(isAdmin
-			? [
-					{ name: "Register Student", href: "/admin/students/register", icon: UserPlus },
-					{ name: "Students", href: "/admin/students/list", icon: Users },
-					{ name: "Subjects", href: "/admin/subjects", icon: BookOpen },
-					{ name: "Accounts", href: "/admin/accounts", icon: Users },
-					{ name: "Messages", href: "/admin/messages", icon: Mail },
-				]
-			: []),
-		{
-			name: "Reports",
-			href: isAdmin ? "/admin/attendance/report" : "/teacher/attendance/report",
-			icon: FileText,
-		},
-		{ name: "Settings", href: "/settings", icon: Cog },
-	];
+	const navigation = getNavigationItems(isAdmin ? "admin" : "teacher");
 
 	return (
 		<>

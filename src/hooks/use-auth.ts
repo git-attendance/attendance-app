@@ -3,7 +3,7 @@ import type { User } from "@/models/test";
 import { authService } from "@/services/authService";
 
 export const useAuth = () => {
-	const [user, setUser] = useState<User | null>(null);
+	const [user, setUser] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
 

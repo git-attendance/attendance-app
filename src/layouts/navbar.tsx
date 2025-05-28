@@ -1,7 +1,8 @@
+import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/providers/theme-provider";
 import { Bell, Menu, Moon, Sun, UserCircle } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface NavbarProps {
 	onMenuClick: () => void;
@@ -10,6 +11,14 @@ interface NavbarProps {
 const Navbar = ({ onMenuClick }: NavbarProps) => {
 	const [showDropdown, setShowDropdown] = useState(false);
 	const { theme, setTheme } = useTheme();
+	const authService = useAuth();
+	const navigate = useNavigate();
+
+	// mocked logout function
+	const handleSignOut = () => {
+		authService.logout();
+		navigate("/login");
+	};
 
 	const toggleTheme = () => {
 		setTheme(theme === "dark" ? "light" : "dark");
@@ -73,7 +82,7 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
 								</Link>
 								<button
 									className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-									onClick={() => setShowDropdown(false)}>
+									onClick={handleSignOut}>
 									Sign out
 								</button>
 							</div>

@@ -22,6 +22,7 @@ export const formatCurrency = (
  * @param locale - The locale for formatting (default: 'en-US')
  * @param options - Additional options for formatting (optional)
  * @returns The formatted date string
+ *
  */
 export const formatDate = (
 	date: Date | string,
@@ -135,39 +136,6 @@ export const toTitleCase = (text: string): string => {
 		.split(" ")
 		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 		.join(" ");
-};
-
-export const formatListingAddress = (
-	address?: Partial<{
-		street?: string;
-		barangay?: string;
-		city?: string;
-		province?: string;
-		region?: string;
-		zipCode?: string;
-		country?: string;
-	}>,
-	excludeFields: Array<
-		"street" | "barangay" | "city" | "province" | "region" | "zipCode" | "country"
-	> = [],
-): string => {
-	if (!address) return "N/A";
-
-	const allFields: Array<keyof typeof address> = [
-		"street",
-		"barangay",
-		"city",
-		"province",
-		"region",
-		"zipCode",
-		"country",
-	];
-
-	return allFields
-		.filter((field) => !excludeFields.includes(field)) // Exclude selected fields
-		.map((field) => address[field] || "N/A") // Ensure type safety
-		.filter((value) => value !== "N/A") // Remove empty values
-		.join(", ");
 };
 
 export const getTimeDifference = (dateString: string): string => {

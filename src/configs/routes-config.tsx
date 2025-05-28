@@ -1,4 +1,4 @@
-import AdminDashboard from "@/pages/admin/dashboard";
+import Dashboard from "@/pages/admin/dashboard";
 import AuthPage from "@/pages/auth-page";
 import MarkAttendance from "@/pages/mark-attendance";
 
@@ -16,7 +16,7 @@ export const routesConfig = {
 	],
 	MAIN: [
 		{
-			path: "/admin/home",
+			path: "/",
 			element: (
 				<>
 					<div>landing</div>
@@ -26,11 +26,11 @@ export const routesConfig = {
 
 		{
 			path: "/admin/dashboard",
-			element: <AdminDashboard />,
+			element: <Dashboard />,
 		},
 		{
 			path: "/teacher/dashboard",
-			element: <AdminDashboard />,
+			element: <Dashboard />,
 		},
 		{
 			path: "/admin/mark-attendance",
