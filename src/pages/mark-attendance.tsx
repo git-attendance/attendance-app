@@ -9,6 +9,7 @@ const MarkAttendance = () => {
 	const [capturedImage, setCapturedImage] = useState<string | null>(null);
 	const [recognizedUser, setRecognizedUser] = useState<User | null>(null);
 	const [confidence, setConfidence] = useState<number>(0);
+	console.log("MarkAttendance component rendered", capturedImage);
 
 	const handleCapture = async (_descriptor: null, imageSrc: string | null) => {
 		setStage("scanning");
