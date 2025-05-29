@@ -1,6 +1,7 @@
 import Dashboard from "@/pages/admin/dashboard";
 import AuthPage from "@/pages/auth-page";
 import MarkAttendance from "@/pages/mark-attendance";
+import StudentsPage from "@/pages/students/students-page";
 
 export const routesConfig = {
 	AUTH: [
@@ -39,6 +40,10 @@ export const routesConfig = {
 		{
 			path: "/admin/students/register",
 			element: <div>Register Student</div>,
+		},
+		{
+			path: "/admin/students",
+			element: <StudentsPage />,
 		},
 	],
 };

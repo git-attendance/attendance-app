@@ -28,7 +28,7 @@ export const getNavigationItems = (role: "admin" | "teacher") => {
 		...(isAdmin
 			? [
 					{ name: "Register Student", href: "/admin/students/register", icon: UserPlus },
-					{ name: "Students", href: "/admin/students/list", icon: Users },
+					{ name: "Students", href: "/admin/students/", icon: Users },
 					{ name: "Subjects", href: "/admin/subjects", icon: BookOpen },
 					{ name: "Accounts", href: "/admin/accounts", icon: Users },
 					{ name: "Messages", href: "/admin/messages", icon: Mail },
