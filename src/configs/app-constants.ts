@@ -26,7 +26,7 @@ export const APP_CONSTANTS = {
 	CONTINUE_WITH_GOOGLE: "Continue with Google",
 	CONTINUE_WITH_FACEBOOK: "Continue with Facebook",
 	MEMBER_LOGIN: "Member Login",
-	LOGIN_PAGE_TAGLINE: "Eastern Tayabas College br-point Attendance Management System",
+	LOGIN_PAGE_TAGLINE: "Eastern Tayabas College Attendance Management System",
 	SAMPLE_EMAIL: "example@gmail.com",
 	PASSWORD_REQUIREMENT: "Enter at least 8+ characters",
 	FULLNAME: "Full Name",

@@ -3,6 +3,7 @@ import useOnlineStatus from "./hooks/useOnlineStatus";
 import SplashScreen from "./layouts/splash-screen";
 import { ThemeProvider } from "./providers/theme-provider";
 import Error from "./pages/error-page";
+import { Toaster } from "./components/ui/sonner";
 
 function App() {
 	const Router = lazy(() => import("./routes/router"));
@@ -17,6 +18,7 @@ function App() {
 				<div className="min-h-screen h-auto bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 					<Router />
 				</div>
+				<Toaster />
 			</Suspense>
 		</ThemeProvider>
 	);
