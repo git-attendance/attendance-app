@@ -28,7 +28,7 @@ const AuthPage = () => {
 								onLoad={() => setImageLoaded(true)}
 								loading="eager"
 							/>
-							<div className="absolute bottom-0 left-0 w-full h-72 flex items-center justify-center  p-4 pb-10">
+							<div className="absolute bottom-0 left-0 w-full h-80 flex items-end justify-center bg-gradient-to-t from-blue-950 to-transparent p-4 pb-10">
 								<p className="text-white text-4xl font-semibold whitespace-pre-wrap font-serif">
 									{APP_CONSTANTS.LOGIN_PAGE_TAGLINE.split("br-point").map(
 										(part, index) => (

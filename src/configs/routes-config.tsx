@@ -1,3 +1,4 @@
+import { CalendarTemplate } from "@/components/calendar/calendar-template";
 import Dashboard from "@/pages/admin/dashboard";
 import AuthPage from "@/pages/auth-page";
 import MarkAttendance from "@/pages/mark-attendance";
@@ -32,6 +33,14 @@ export const routesConfig = {
 		{
 			path: "/teacher/dashboard",
 			element: <Dashboard />,
+		},
+		{
+			path: "/teacher/calendar",
+			element: <CalendarTemplate />,
+		},
+		{
+			path: "/admin/calendar",
+			element: <CalendarTemplate />,
 		},
 		{
 			path: "/admin/mark-attendance",
