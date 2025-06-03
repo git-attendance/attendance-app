@@ -4,6 +4,7 @@ import { dashboardData } from "@/configs/test/dashboard-data";
 import { useAttendance } from "@/contexts/attendance-context";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDate } from "@/utils/common";
+import { format } from "date-fns";
 import { UserCheck, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -110,7 +111,7 @@ const Dashboard = () => {
 											</div>
 											<div className="text-right">
 												<p className="text-sm font-medium text-gray-900">
-													{formatDate(new Date(record.timeIn), "h:mm aa")}
+													{format(new Date(record.timeIn), "h:mm aa")}
 												</p>
 												<p className="text-xs text-green-600">Present</p>
 											</div>
