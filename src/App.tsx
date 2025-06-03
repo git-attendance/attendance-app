@@ -20,7 +20,7 @@ function App() {
 					<div className="min-h-screen h-auto bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 						<Router />
 					</div>
-					<Toaster />
+					<Toaster richColors />
 				</Suspense>
 			</AttendanceProvider>
 		</ThemeProvider>

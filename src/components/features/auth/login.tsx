@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { APP_CONSTANTS } from "@/configs/app-constants";
 import { Button } from "@/components/ui/button";
 import { authService } from "@/services/authService";
+import { Link } from "react-router-dom";
 
 const Login = () => {
 	const navigate = useNavigate();
@@ -136,11 +137,11 @@ const Login = () => {
 						</div>
 
 						<div className="text-sm">
-							<a
-								href="#"
+							<Link
+								to="/forgot-password"
 								className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
 								Forgot your password?
-							</a>
+							</Link>
 						</div>
 					</div>
 
@@ -152,6 +153,15 @@ const Login = () => {
 						</Button>
 					</div>
 				</form>
+
+				<div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+					Don't have an account?{" "}
+					<Link
+						to="/register"
+						className="text-blue-600 hover:text-blue-500 dark:text-blue-400">
+						Sign up
+					</Link>
+				</div>
 
 				<div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
 					Demo Credentials:

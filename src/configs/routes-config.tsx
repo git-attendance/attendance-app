@@ -3,62 +3,43 @@ import Dashboard from "@/pages/admin/dashboard";
 import AuthPage from "@/pages/auth-page";
 import LiveAttendance from "@/pages/live-attendance";
 import MarkAttendance from "@/pages/mark-attendance";
+import StudentAttendance from "@/pages/students/student-attendance";
 import StudentRegister from "@/pages/students/student-register";
 import StudentsPage from "@/pages/students/students-page";
 
+const roleRoutes = [
+	{ path: "dashboard", element: <Dashboard /> },
+	{ path: "calendar", element: <CalendarTemplate /> },
+];
+
+const adminOnlyRoutes = [
+	{ path: "mark-attendance", element: <MarkAttendance /> },
+	{ path: "live-attendance", element: <LiveAttendance /> },
+	{ path: "students/register", element: <StudentRegister /> },
+	{ path: "students", element: <StudentsPage /> },
+];
+
 export const routesConfig = {
 	AUTH: [
-		{
-			path: "/login",
-			element: <AuthPage />,
-		},
-
-		{
-			path: "/register",
-			element: <AuthPage />,
-		},
+		{ path: "/login", element: <AuthPage /> },
+		{ path: "/register", element: <AuthPage /> },
 	],
+	PUBLIC: [{ path: "/attendance", element: <StudentAttendance /> }],
 	MAIN: [
-		{
-			path: "/",
-			element: (
-				<>
-					<div>landing</div>
-				</>
-			),
-		},
+		{ path: "/", element: <div>landing</div> },
 
-		{
-			path: "/admin/dashboard",
-			element: <Dashboard />,
-		},
-		{
-			path: "/teacher/dashboard",
-			element: <Dashboard />,
-		},
-		{
-			path: "/teacher/calendar",
-			element: <CalendarTemplate />,
-		},
-		{
-			path: "/admin/calendar",
-			element: <CalendarTemplate />,
-		},
-		{
-			path: "/admin/mark-attendance",
-			element: <MarkAttendance />,
-		},
-		{
-			path: "/admin/live-attendance",
-			element: <LiveAttendance />,
-		},
-		{
-			path: "/admin/students/register",
-			element: <StudentRegister />,
-		},
-		{
-			path: "/admin/students",
-			element: <StudentsPage />,
-		},
+		// Dynamic routes for roles
+		...["admin", "teacher"].flatMap((role) =>
+			roleRoutes.map(({ path, element }) => ({
+				path: `/${role}/${path}`,
+				element,
+			})),
+		),
+
+		// Admin-only routes
+		...adminOnlyRoutes.map(({ path, element }) => ({
+			path: `/admin/${path}`,
+			element,
+		})),
 	],
 };

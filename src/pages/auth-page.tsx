@@ -1,13 +1,28 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import SHS_BUILDING from "@/assets/shs-building.jpg";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { APP_CONSTANTS } from "@/configs/app-constants";
 import Login from "@/components/features/auth/login";
+import { useAuth } from "@/hooks/use-auth";
+import SplashScreen from "@/layouts/splash-screen";
+import RegistrationForm from "@/components/features/auth/registration-form";
 
 const AuthPage = () => {
 	const location = useLocation();
+	const navigate = useNavigate();
 	const isLoginPage = location.pathname === "/login";
 	const [imageLoaded, setImageLoaded] = useState(false);
+	const { isAuthenticated, isLoading, user } = useAuth();
+
+	useEffect(() => {
+		if (!isLoading && isAuthenticated && user?.role) {
+			navigate(`/${user.role}/dashboard`, { replace: true });
+		}
+	}, [isAuthenticated, isLoading, user, navigate]);
+
+	if (isLoading || (isAuthenticated && user?.role)) {
+		return <SplashScreen />;
+	}
 
 	return (
 		<>
@@ -49,7 +64,7 @@ const AuthPage = () => {
 					</>
 				) : (
 					<>
-						{/* <RegistrationForm /> */}
+						<RegistrationForm />
 						<section className="w-[70%] h-full hidden md:block">
 							<div
 								className="absolute inset-0 bg-gray-200 animate-pulse"
