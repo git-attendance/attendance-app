@@ -4,6 +4,7 @@ import MainLayout from "@/layouts/main-layout";
 import ProtectedRoute from "./protected-route";
 import AuthLayout from "@/layouts/auth-layout";
 import Error from "@/pages/error-page";
+import { PublicLayout } from "@/layouts/public-layout";
 
 const Routes: RouteObject[] = [
 	{
@@ -14,6 +15,10 @@ const Routes: RouteObject[] = [
 				children: routesConfig.MAIN,
 			},
 		],
+	},
+	{
+		element: <PublicLayout />,
+		children: routesConfig.PUBLIC,
 	},
 	{
 		element: <AuthLayout />,

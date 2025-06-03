@@ -19,11 +19,17 @@ const ProtectedRoute = () => {
 
 	useEffect(() => {
 		if (isLoading) return;
-
+		// If not authenticated, redirect to login
 		if (!isAuthenticated) {
 			navigate("/login", { replace: true, state: { from: location.pathname } });
 			return;
 		}
+		// Root path → redirect to dashboard based on role
+		if (currentPage === "/" && role) {
+			navigate(`/${role}/dashboard`, { replace: true });
+			return;
+		}
+		// If authenticated but no access to the page, redirect to login
 		if (!hasAccess) {
 			navigate("/login", { replace: true });
 		}

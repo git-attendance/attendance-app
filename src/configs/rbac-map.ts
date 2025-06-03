@@ -1,10 +1,4 @@
-const COMMON_ACCESS = [
-	"/",
-	"/listings",
-	"/listings/:id",
-	"/profile/:username",
-	"/business-intelligence",
-];
+const COMMON_ACCESS = ["/attendance"];
 
 export const RBAC_PAGE_ACCESS_MAP: Record<string, string[]> = {
 	admin: [...COMMON_ACCESS, "/admin/*"],
