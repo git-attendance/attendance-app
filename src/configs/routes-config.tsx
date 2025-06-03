@@ -1,7 +1,9 @@
 import { CalendarTemplate } from "@/components/calendar/calendar-template";
 import Dashboard from "@/pages/admin/dashboard";
 import AuthPage from "@/pages/auth-page";
+import LiveAttendance from "@/pages/live-attendance";
 import MarkAttendance from "@/pages/mark-attendance";
+import StudentRegister from "@/pages/students/student-register";
 import StudentsPage from "@/pages/students/students-page";
 
 export const routesConfig = {
@@ -47,8 +49,12 @@ export const routesConfig = {
 			element: <MarkAttendance />,
 		},
 		{
+			path: "/admin/live-attendance",
+			element: <LiveAttendance />,
+		},
+		{
 			path: "/admin/students/register",
-			element: <div>Register Student</div>,
+			element: <StudentRegister />,
 		},
 		{
 			path: "/admin/students",
