@@ -12,8 +12,8 @@ const RegistrationForm = () => {
 		password: "",
 		confirmPassword: "",
 	});
-	const [errors, setErrors] = useState<{ [key: string]: string }>({});
-	const [submitting, setSubmitting] = useState(false);
+	// const [errors, setErrors] = useState<{ [key: string]: string }>({});
+	// const [submitting, setSubmitting] = useState(false);
 
 	// const validate = () => {
 	// 	const errs: typeof errors = {};
@@ -78,9 +78,9 @@ const RegistrationForm = () => {
 								}
 								required
 							/>
-							{errors.name && (
+							{/* {errors.name && (
 								<p className="text-sm text-red-500 mt-1">{errors.name}</p>
-							)}
+							)} */}
 						</div>
 
 						{/* Email */}
@@ -99,9 +99,9 @@ const RegistrationForm = () => {
 								}
 								required
 							/>
-							{errors.email && (
+							{/* {errors.email && (
 								<p className="text-sm text-red-500 mt-1">{errors.email}</p>
-							)}
+							)} */}
 						</div>
 
 						{/* Password */}
@@ -123,9 +123,9 @@ const RegistrationForm = () => {
 								}
 								required
 							/>
-							{errors.password && (
+							{/* {errors.password && (
 								<p className="text-sm text-red-500 mt-1">{errors.password}</p>
-							)}
+							)} */}
 						</div>
 
 						{/* Confirm Password */}
@@ -147,20 +147,21 @@ const RegistrationForm = () => {
 								}
 								required
 							/>
-							{errors.confirmPassword && (
+							{/* {errors.confirmPassword && (
 								<p className="text-sm text-red-500 mt-1">
 									{errors.confirmPassword}
 								</p>
-							)}
+							)} */}
 						</div>
 					</div>
 
 					<Button
 						type="submit"
-						disabled={submitting}
+						disabled={false} // Replace with submitting state
 						className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold dark:bg-blue-500 dark:hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 rounded-md shadow-sm px-4 py-2 flex items-center justify-center gap-2">
 						<UserPlus className="h-5 w-5" />
-						{!submitting ? "Create Account" : "Registering..."}
+						{/* {!submitting ? "Create Account" : "Registering..."} */}
+						Create Account
 					</Button>
 				</form>
 
