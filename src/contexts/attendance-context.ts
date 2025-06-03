@@ -98,9 +98,7 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
 		);
 
 		if (existingAttendance) {
-			toast.error(`
-        "Already Marked,
-        description: ${student.fullName} has already been marked present today.`);
+			toast.error(`Attendance already marked for ${student.fullName}.`);
 			return;
 		}
 
