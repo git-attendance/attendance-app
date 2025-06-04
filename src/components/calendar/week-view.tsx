@@ -9,6 +9,8 @@ interface WeekViewProps {
 	selectedDate?: Date;
 	onDateSelect: (date: Date) => void;
 	onEventClick: (event: CalendarEvent) => void;
+	onEditEvent?: (event: CalendarEvent) => void;
+	onDeleteEvent?: (eventId: string) => void;
 }
 
 const getWeekDays = (date: Date): Date[] => {
@@ -32,6 +34,8 @@ export const WeekView = ({
 	selectedDate,
 	onDateSelect,
 	onEventClick,
+	onEditEvent,
+	onDeleteEvent,
 }: WeekViewProps) => {
 	const weekDays = getWeekDays(currentDate);
 	const today = new Date();
@@ -121,6 +125,8 @@ export const WeekView = ({
 													key={event.id}
 													event={event}
 													onClick={onEventClick}
+													onEdit={onEditEvent}
+													onDelete={onDeleteEvent}
 													isCompact
 													className="text-xs"
 												/>

@@ -6,9 +6,17 @@ interface DayViewProps {
 	currentDate: Date;
 	events: CalendarEvent[];
 	onEventClick: (event: CalendarEvent) => void;
+	onEditEvent?: (event: CalendarEvent) => void;
+	onDeleteEvent?: (eventId: string) => void;
 }
 
-export const DayView = ({ currentDate, events, onEventClick }: DayViewProps) => {
+export const DayView = ({
+	currentDate,
+	events,
+	onEventClick,
+	onEditEvent,
+	onDeleteEvent,
+}: DayViewProps) => {
 	const dayEvents = getEventsForDate(currentDate, events);
 	const today = new Date();
 	const isToday = currentDate.toDateString() === today.toDateString();
@@ -86,6 +94,8 @@ export const DayView = ({ currentDate, events, onEventClick }: DayViewProps) => 
 								key={event.id}
 								event={event}
 								onClick={onEventClick}
+								onEdit={onEditEvent}
+								onDelete={onDeleteEvent}
 								className="p-4"
 							/>
 						))}
