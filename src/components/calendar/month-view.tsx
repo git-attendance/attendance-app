@@ -9,6 +9,8 @@ interface MonthViewProps {
 	selectedDate?: Date;
 	onDateSelect: (date: Date) => void;
 	onEventClick: (event: CalendarEvent) => void;
+	onEditEvent?: (event: CalendarEvent) => void;
+	onDeleteEvent?: (eventId: string) => void;
 }
 
 export const MonthView = ({
@@ -17,6 +19,8 @@ export const MonthView = ({
 	selectedDate,
 	onDateSelect,
 	onEventClick,
+	onEditEvent,
+	onDeleteEvent,
 }: MonthViewProps) => {
 	const days = getDaysInMonth(currentDate);
 	const today = new Date();
@@ -67,12 +71,14 @@ export const MonthView = ({
 								</span>
 							</div>
 
-							<div className="space-y-1 max-h-[80px] overflow-y-auto">
+							<div className="space-y-1 max-h-[80px] ">
 								{dayEvents.slice(0, 3).map((event) => (
 									<EventCard
 										key={event.id}
 										event={event}
 										onClick={onEventClick}
+										onEdit={onEditEvent}
+										onDelete={onDeleteEvent}
 										isCompact
 									/>
 								))}

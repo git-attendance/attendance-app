@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,8 +25,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { type CalendarEvent, type EventType } from "@/models/calendar";
 import { cn } from "@/lib/utils";
+import type { CalendarEvent, EventType } from "@/models/calendar";
 
 const createEventSchema = z
 	.object({
@@ -40,13 +41,28 @@ const createEventSchema = z
 		endDate: z.date({
 			required_error: "End date is required",
 		}),
+		startTime: z.string().min(1, "Start time is required"),
+		endTime: z.string().min(1, "End time is required"),
 		eventTypeId: z.string().min(1, "Event type is required"),
 		location: z.string().optional(),
 	})
-	.refine((data) => data.endDate >= data.startDate, {
-		message: "End date must be after or equal to start date",
-		path: ["endDate"],
-	});
+	.refine(
+		(data) => {
+			const startDateTime = new Date(data.startDate);
+			const [startHours, startMinutes] = data.startTime.split(":").map(Number);
+			startDateTime.setHours(startHours, startMinutes);
+
+			const endDateTime = new Date(data.endDate);
+			const [endHours, endMinutes] = data.endTime.split(":").map(Number);
+			endDateTime.setHours(endHours, endMinutes);
+
+			return endDateTime > startDateTime;
+		},
+		{
+			message: "End time must be after start time",
+			path: ["endTime"],
+		},
+	);
 
 type CreateEventFormData = z.infer<typeof createEventSchema>;
 
@@ -56,6 +72,7 @@ interface CreateEventModalProps {
 	onCreateEvent: (event: Omit<CalendarEvent, "id">) => void;
 	eventTypes: EventType[];
 	initialDate?: Date;
+	editingEvent?: CalendarEvent | null;
 }
 
 export const CreateEventModal = ({
@@ -64,28 +81,71 @@ export const CreateEventModal = ({
 	onCreateEvent,
 	eventTypes,
 	initialDate,
+	editingEvent,
 }: CreateEventModalProps) => {
 	const form = useForm<CreateEventFormData>({
 		resolver: zodResolver(createEventSchema),
 		defaultValues: {
-			title: "",
-			description: "",
-			startDate: initialDate || new Date(),
-			endDate: initialDate || new Date(),
-			eventTypeId: "",
-			location: "",
+			title: editingEvent?.title || "",
+			description: editingEvent?.description || "",
+			startDate: editingEvent?.startDate || initialDate || new Date(),
+			endDate: editingEvent?.endDate || initialDate || new Date(),
+			startTime: editingEvent
+				? `${String(editingEvent.startDate.getHours()).padStart(2, "0")}:${String(editingEvent.startDate.getMinutes()).padStart(2, "0")}`
+				: "09:00",
+			endTime: editingEvent
+				? `${String(editingEvent.endDate.getHours()).padStart(2, "0")}:${String(editingEvent.endDate.getMinutes()).padStart(2, "0")}`
+				: "10:00",
+			eventTypeId: editingEvent?.type.id || "",
+			location: editingEvent?.location || "",
 		},
 	});
+
+	// Reset form when editingEvent changes
+	useEffect(() => {
+		if (editingEvent) {
+			form.reset({
+				title: editingEvent.title,
+				description: editingEvent.description || "",
+				startDate: editingEvent.startDate,
+				endDate: editingEvent.endDate,
+				startTime: `${String(editingEvent.startDate.getHours()).padStart(2, "0")}:${String(editingEvent.startDate.getMinutes()).padStart(2, "0")}`,
+				endTime: `${String(editingEvent.endDate.getHours()).padStart(2, "0")}:${String(editingEvent.endDate.getMinutes()).padStart(2, "0")}`,
+				eventTypeId: editingEvent.type.id,
+				location: editingEvent.location || "",
+			});
+		} else {
+			form.reset({
+				title: "",
+				description: "",
+				startDate: initialDate || new Date(),
+				endDate: initialDate || new Date(),
+				startTime: "09:00",
+				endTime: "10:00",
+				eventTypeId: "",
+				location: "",
+			});
+		}
+	}, [editingEvent, initialDate, form]);
 
 	const onSubmit = (data: CreateEventFormData) => {
 		const selectedEventType = eventTypes.find((type) => type.id === data.eventTypeId);
 		if (!selectedEventType) return;
 
+		// Combine date and time for start and end
+		const startDateTime = new Date(data.startDate);
+		const [startHours, startMinutes] = data.startTime.split(":").map(Number);
+		startDateTime.setHours(startHours, startMinutes);
+
+		const endDateTime = new Date(data.endDate);
+		const [endHours, endMinutes] = data.endTime.split(":").map(Number);
+		endDateTime.setHours(endHours, endMinutes);
+
 		const newEvent: Omit<CalendarEvent, "id"> = {
 			title: data.title,
 			description: data.description,
-			startDate: data.startDate,
-			endDate: data.endDate,
+			startDate: startDateTime,
+			endDate: endDateTime,
 			type: selectedEventType,
 			location: data.location,
 		};
@@ -104,7 +164,7 @@ export const CreateEventModal = ({
 		<Dialog open={isOpen} onOpenChange={handleClose}>
 			<DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
-					<DialogTitle>Create New Event</DialogTitle>
+					<DialogTitle>{editingEvent ? "Edit Event" : "Create New Event"}</DialogTitle>
 				</DialogHeader>
 
 				<Form {...form}>
@@ -221,6 +281,36 @@ export const CreateEventModal = ({
 							/>
 						</div>
 
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<FormField
+								control={form.control}
+								name="startTime"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Start Time *</FormLabel>
+										<FormControl>
+											<Input type="time" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={form.control}
+								name="endTime"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>End Time *</FormLabel>
+										<FormControl>
+											<Input type="time" {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</div>
+
 						<FormField
 							control={form.control}
 							name="eventTypeId"
@@ -278,7 +368,7 @@ export const CreateEventModal = ({
 								Cancel
 							</Button>
 							<Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-								Create Event
+								{editingEvent ? "Update Event" : "Create Event"}
 							</Button>
 						</div>
 					</form>

@@ -1,15 +1,25 @@
+import { eventTypes, sampleEvents } from "@/configs/test/sample-events";
 import type { CalendarEvent, CalendarView } from "@/models/calendar";
+import { eventStorageService } from "@/services/eventLocalService";
 import { getEventsForDate } from "@/utils/calendar-utils";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { CalendarHeader } from "./calendar-header";
 import { MonthView } from "./month-view";
 import { WeekView } from "./week-view";
 import { DayView } from "./day-view";
 import { EventsSidebar } from "./events-sidebar";
-import { eventTypes, sampleEvents } from "@/configs/test/sample-events";
-import { toast } from "sonner";
-import { eventStorageService } from "@/services/eventLocalService";
 import { CreateEventModal } from "./create-event-form";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "../ui/alert-dialog";
 
 export const CalendarTemplate = () => {
 	const [currentDate, setCurrentDate] = useState(new Date());
@@ -17,6 +27,8 @@ export const CalendarTemplate = () => {
 	const [view, setView] = useState<CalendarView>("month");
 	const [events, setEvents] = useState<CalendarEvent[]>([]);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+	const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+	const [eventToDelete, setEventToDelete] = useState<CalendarEvent | null>(null);
 
 	// Load events from localStorage on component mount
 	useEffect(() => {
@@ -65,9 +77,10 @@ export const CalendarTemplate = () => {
 	};
 
 	const handleEventClick = (event: CalendarEvent) => {
-		toast.message(event.title, {
-			description: event.description || `Event on ${event.startDate.toLocaleDateString()}`,
-		});
+		toast.info(
+			`${event.title}
+			${event.description}` || `Event on ${event.startDate.toLocaleDateString()}`,
+		);
 	};
 
 	const handleCreateEvent = (newEventData: Omit<CalendarEvent, "id">) => {
@@ -82,25 +95,60 @@ export const CalendarTemplate = () => {
 		// Update local state
 		setEvents((prevEvents) => [...prevEvents, newEvent]);
 
-		toast.message(newEvent.title, {
-			description: `"${newEvent.title}" has been added to your calendar.`,
-		});
+		toast.info(`"${newEvent.title}" has been added to your calendar.`);
+	};
+
+	const handleUpdateEvent = (updatedEventData: Omit<CalendarEvent, "id">) => {
+		if (!editingEvent) return;
+
+		const updatedEvent: CalendarEvent = {
+			...updatedEventData,
+			id: editingEvent.id,
+		};
+
+		// Update in localStorage
+		eventStorageService.updateEvent(updatedEvent);
+
+		// Update local state
+		setEvents((prevEvents) =>
+			prevEvents.map((event) => (event.id === editingEvent.id ? updatedEvent : event)),
+		);
+
+		toast.info(`"${updatedEvent.title}" has been updated in your calendar.`);
+
+		setEditingEvent(null);
 	};
 
 	const handleDeleteEvent = (eventId: string) => {
-		// 1. Remove from localStorage
-		eventStorageService.removeEvent(eventId);
+		const event = events.find((e) => e.id === eventId);
+		if (event) {
+			setEventToDelete(event);
+		}
+	};
 
-		// 2. Update local state
-		setEvents((prevEvents) => prevEvents.filter((e) => e.id !== eventId));
+	const confirmDeleteEvent = () => {
+		if (!eventToDelete) return;
 
-		toast.success("Event deleted");
+		// Remove from localStorage
+		eventStorageService.removeEvent(eventToDelete.id);
+
+		// Update local state
+		setEvents((prevEvents) => prevEvents.filter((event) => event.id !== eventToDelete.id));
+
+		toast(`"${eventToDelete.title}" has been deleted from your calendar.`);
+
+		setEventToDelete(null);
+	};
+
+	const handleEditEvent = (event: CalendarEvent) => {
+		setEditingEvent(event);
+		setIsCreateModalOpen(true);
 	};
 
 	const selectedDateEvents = getEventsForDate(selectedDate, events);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors">
+		<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
 			<CalendarHeader
 				currentDate={currentDate}
 				view={view}
@@ -112,7 +160,7 @@ export const CalendarTemplate = () => {
 			/>
 
 			<div className="flex">
-				<div className="flex-1 p-6 bg-white dark:bg-gray-900 rounded-lg shadow transition-colors">
+				<div className="flex-1 p-6">
 					{view === "month" && (
 						<MonthView
 							currentDate={currentDate}
@@ -120,6 +168,8 @@ export const CalendarTemplate = () => {
 							selectedDate={selectedDate}
 							onDateSelect={handleDateSelect}
 							onEventClick={handleEventClick}
+							onEditEvent={handleEditEvent}
+							onDeleteEvent={handleDeleteEvent}
 						/>
 					)}
 					{view === "week" && (
@@ -129,6 +179,8 @@ export const CalendarTemplate = () => {
 							selectedDate={selectedDate}
 							onDateSelect={handleDateSelect}
 							onEventClick={handleEventClick}
+							onEditEvent={handleEditEvent}
+							onDeleteEvent={handleDeleteEvent}
 						/>
 					)}
 					{view === "day" && (
@@ -136,6 +188,8 @@ export const CalendarTemplate = () => {
 							currentDate={currentDate}
 							events={events}
 							onEventClick={handleEventClick}
+							onEditEvent={handleEditEvent}
+							onDeleteEvent={handleDeleteEvent}
 						/>
 					)}
 				</div>
@@ -145,17 +199,44 @@ export const CalendarTemplate = () => {
 					events={selectedDateEvents}
 					eventTypes={eventTypes}
 					onEventClick={handleEventClick}
-					onEventDelete={handleDeleteEvent}
+					onEditEvent={handleEditEvent}
+					onDeleteEvent={handleDeleteEvent}
 				/>
 			</div>
-			{/* Create Event Modal */}
+
+			{/* Create/Edit Event Modal */}
 			<CreateEventModal
 				isOpen={isCreateModalOpen}
-				onClose={() => setIsCreateModalOpen(false)}
-				onCreateEvent={handleCreateEvent}
+				onClose={() => {
+					setIsCreateModalOpen(false);
+					setEditingEvent(null);
+				}}
+				onCreateEvent={editingEvent ? handleUpdateEvent : handleCreateEvent}
 				eventTypes={eventTypes}
 				initialDate={selectedDate}
+				editingEvent={editingEvent}
 			/>
+
+			{/* Delete Confirmation Modal */}
+			<AlertDialog open={!!eventToDelete} onOpenChange={() => setEventToDelete(null)}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete Event</AlertDialogTitle>
+						<AlertDialogDescription>
+							Are you sure you want to delete "{eventToDelete?.title}"? This action
+							cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={confirmDeleteEvent}
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 };
