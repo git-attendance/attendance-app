@@ -1,9 +1,10 @@
-import type { AttendanceRecord, Student } from "@/models/test-attendance";
+import type { AttendanceRecord, Student, Subject } from "@/models/test-attendance";
 import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from "react";
 import { toast } from "sonner";
 
 interface AttendanceState {
 	students: Student[];
+	subjects?: Subject[];
 	attendanceRecords: AttendanceRecord[];
 	isLiveMode: boolean;
 }
@@ -13,12 +14,17 @@ type AttendanceAction =
 	| { type: "ADD_STUDENT"; payload: Student }
 	| { type: "UPDATE_STUDENT"; payload: Student }
 	| { type: "DELETE_STUDENT"; payload: string }
+	| { type: "SET_SUBJECTS"; payload: Subject[] }
+	| { type: "ADD_SUBJECT"; payload: Subject }
+	| { type: "UPDATE_SUBJECT"; payload: Subject }
+	| { type: "DELETE_SUBJECT"; payload: string }
 	| { type: "MARK_ATTENDANCE"; payload: AttendanceRecord }
 	| { type: "SET_LIVE_MODE"; payload: boolean }
 	| { type: "LOAD_DATA" };
 
 const initialState: AttendanceState = {
 	students: [],
+	subjects: [],
 	attendanceRecords: [],
 	isLiveMode: false,
 };
@@ -30,6 +36,9 @@ const AttendanceContext = createContext<{
 	addStudent: (student: Omit<Student, "id" | "createdAt">) => void;
 	updateStudent: (student: Student) => void;
 	deleteStudent: (studentId: string) => void;
+	addSubject: (subject: Omit<Subject, "id" | "createdAt">) => void;
+	updateSubject: (subject: Subject) => void;
+	deleteSubject: (subjectId: string) => void;
 } | null>(null);
 
 function attendanceReducer(state: AttendanceState, action: AttendanceAction): AttendanceState {
@@ -53,6 +62,22 @@ function attendanceReducer(state: AttendanceState, action: AttendanceAction): At
 					(r) => r.studentId !== action.payload,
 				),
 			};
+		case "SET_SUBJECTS":
+			return { ...state, subjects: action.payload };
+		case "ADD_SUBJECT":
+			return { ...state, subjects: [...(state.subjects ?? []), action.payload] };
+		case "UPDATE_SUBJECT":
+			return {
+				...state,
+				subjects: (state.subjects ?? []).map((s) =>
+					s.id === action.payload.id ? action.payload : s,
+				),
+			};
+		case "DELETE_SUBJECT":
+			return {
+				...state,
+				subjects: (state.subjects ?? []).filter((s) => s.id !== action.payload),
+			};
 		case "MARK_ATTENDANCE":
 			return {
 				...state,
@@ -62,10 +87,12 @@ function attendanceReducer(state: AttendanceState, action: AttendanceAction): At
 			return { ...state, isLiveMode: action.payload };
 		case "LOAD_DATA":
 			const storedStudents = JSON.parse(localStorage.getItem("attendance_students") || "[]");
+			const storedSubjects = JSON.parse(localStorage.getItem("attendance_subjects") || "[]");
 			const storedRecords = JSON.parse(localStorage.getItem("attendance_records") || "[]");
 			return {
 				...state,
 				students: storedStudents,
+				subjects: storedSubjects,
 				attendanceRecords: storedRecords,
 			};
 		default:
@@ -83,6 +110,10 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
 	useEffect(() => {
 		localStorage.setItem("attendance_students", JSON.stringify(state.students));
 	}, [state.students]);
+
+	useEffect(() => {
+		localStorage.setItem("attendance_subjects", JSON.stringify(state.subjects));
+	}, [state.subjects]);
 
 	useEffect(() => {
 		localStorage.setItem("attendance_records", JSON.stringify(state.attendanceRecords));
@@ -149,6 +180,39 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
       ${student?.fullName} has been removed from the system.`);
 	};
 
+	const addSubject = (subjectData: Omit<Subject, "id" | "createdAt">) => {
+		const subject: Subject = {
+			...subjectData,
+			id: `subject_${Date.now()}`,
+			createdAt: new Date(),
+		};
+		dispatch({ type: "ADD_SUBJECT", payload: subject });
+
+		toast.success(
+			`Subject Added,
+	  ${subject.name} has been added successfully.`,
+		);
+	};
+
+	const updateSubject = (subject: Subject) => {
+		dispatch({ type: "UPDATE_SUBJECT", payload: subject });
+
+		toast.info(
+			`Subject Updated,
+	  ${subject.name} information has been updated.`,
+		);
+	};
+
+	const deleteSubject = (subjectId: string) => {
+		const subject = (state.subjects ?? []).find((s) => s.id === subjectId);
+		dispatch({ type: "DELETE_SUBJECT", payload: subjectId });
+
+		toast.warning(
+			`Subject Removed,
+	  ${subject?.name} has been removed from the system.`,
+		);
+	};
+
 	return React.createElement(
 		AttendanceContext.Provider,
 		{
@@ -159,6 +223,9 @@ export function AttendanceProvider({ children }: { children: ReactNode }) {
 				addStudent,
 				updateStudent,
 				deleteStudent,
+				addSubject,
+				updateSubject,
+				deleteSubject,
 			},
 		},
 		children,
