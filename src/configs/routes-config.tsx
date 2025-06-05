@@ -6,6 +6,7 @@ import MarkAttendance from "@/pages/mark-attendance";
 import StudentAttendance from "@/pages/students/student-attendance";
 import StudentRegister from "@/pages/students/student-register";
 import StudentsPage from "@/pages/students/students-page";
+import Subjects from "@/pages/subjects-page";
 
 const roleRoutes = [
 	{ path: "dashboard", element: <Dashboard /> },
@@ -17,6 +18,7 @@ const adminOnlyRoutes = [
 	{ path: "live-attendance", element: <LiveAttendance /> },
 	{ path: "students/register", element: <StudentRegister /> },
 	{ path: "students", element: <StudentsPage /> },
+	{ path: "subjects", element: <Subjects /> },
 ];
 
 export const routesConfig = {

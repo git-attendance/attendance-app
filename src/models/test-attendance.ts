@@ -20,6 +20,17 @@ export interface AttendanceRecord {
 	date: string;
 }
 
+export interface Subject {
+	id: string;
+	name: string;
+	code: string;
+	instructor: string;
+	room: string;
+	schedule: string;
+	color: string;
+	createdAt: Date;
+}
+
 export interface FaceRecognitionData {
 	descriptors: Float32Array[];
 	confidence: number;
