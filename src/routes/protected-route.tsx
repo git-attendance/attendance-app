@@ -1,8 +1,8 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import SplashScreen from "@/layouts/splash-screen";
-import { useAuth } from "@/hooks/use-auth";
 import { RBAC_PAGE_ACCESS_MAP } from "@/configs/rbac-map";
+import { useAuth } from "@/contexts/auth-context";
 
 const ProtectedRoute = () => {
 	const { isAuthenticated, isLoading, user } = useAuth();

@@ -5,6 +5,7 @@ import { ThemeProvider } from "./providers/theme-provider";
 import Error from "./pages/error-page";
 import { Toaster } from "./components/ui/sonner";
 import { AttendanceProvider } from "./contexts/attendance-context";
+import { AuthProvider } from "./contexts/auth-context";
 
 function App() {
 	const Router = lazy(() => import("./routes/router"));
@@ -15,14 +16,16 @@ function App() {
 	}
 	return (
 		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-			<AttendanceProvider>
-				<Suspense fallback={<SplashScreen />}>
-					<div className="min-h-screen h-auto bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-						<Router />
-					</div>
-					<Toaster richColors />
-				</Suspense>
-			</AttendanceProvider>
+			<AuthProvider>
+				<AttendanceProvider>
+					<Suspense fallback={<SplashScreen />}>
+						<div className="min-h-screen h-auto bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+							<Router />
+						</div>
+						<Toaster richColors />
+					</Suspense>
+				</AttendanceProvider>
+			</AuthProvider>
 		</ThemeProvider>
 	);
 }

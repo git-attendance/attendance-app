@@ -2,7 +2,7 @@ import StatCard from "@/components/features/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { dashboardData } from "@/configs/test/dashboard-data";
 import { useAttendance } from "@/contexts/attendance-context";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 import { formatDate } from "@/utils/common";
 import { format } from "date-fns";
 import { UserCheck, Users } from "lucide-react";

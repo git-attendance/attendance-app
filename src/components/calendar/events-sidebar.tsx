@@ -21,10 +21,14 @@ export const EventsSidebar = ({
 	onDeleteEvent,
 }: EventsSidebarProps) => {
 	return (
-		<div className="w-80 bg-white border-l border-gray-200 p-6">
+		<div className="w-80 bg-white border-l border-gray-200 p-6 dark:bg-gray-900 dark:border-gray-800">
 			<div className="mb-6">
-				<h2 className="text-lg font-semibold text-gray-900 mb-2">Events</h2>
-				<p className="text-sm text-gray-600">{formatDate(selectedDate)}</p>
+				<h2 className="text-lg font-semibold text-gray-900 mb-2 dark:text-gray-100">
+					Events
+				</h2>
+				<p className="text-sm text-gray-600 dark:text-gray-400">
+					{formatDate(selectedDate)}
+				</p>
 			</div>
 
 			{events.length > 0 ? (
@@ -41,18 +45,22 @@ export const EventsSidebar = ({
 					))}
 				</div>
 			) : (
-				<div className="text-center py-8 text-gray-500">
+				<div className="text-center py-8 text-gray-500 dark:text-gray-400">
 					<div className="text-sm">No events scheduled</div>
 				</div>
 			)}
 
 			<div className="mt-8">
-				<h3 className="text-sm font-semibold text-gray-900 mb-3">Event Types</h3>
+				<h3 className="text-sm font-semibold text-gray-900 mb-3 dark:text-gray-100">
+					Event Types
+				</h3>
 				<div className="space-y-2">
 					{eventTypes.map((type) => (
 						<div key={type.id} className="flex items-center space-x-2">
 							<div className={cn("w-3 h-3 rounded-full", type.bgColor)} />
-							<span className="text-sm text-gray-700">{type.name}</span>
+							<span className="text-sm text-gray-700 dark:text-gray-300">
+								{type.name}
+							</span>
 						</div>
 					))}
 				</div>

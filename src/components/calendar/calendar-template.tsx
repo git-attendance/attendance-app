@@ -148,7 +148,7 @@ export const CalendarTemplate = () => {
 	const selectedDateEvents = getEventsForDate(selectedDate, events);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+		<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-blue-950 dark:via-gray-900 dark:to-gray-800 rounded-2xl">
 			<CalendarHeader
 				currentDate={currentDate}
 				view={view}

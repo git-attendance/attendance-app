@@ -4,27 +4,29 @@ import { School, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { APP_CONSTANTS } from "@/configs/app-constants";
 import { Button } from "@/components/ui/button";
-import { authService } from "@/services/authService";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/auth-context";
+import { toast } from "sonner";
 
 const Login = () => {
+	const { login } = useAuth();
 	const navigate = useNavigate();
 	const [role, setRole] = useState<"admin" | "teacher">("teacher");
 	const [credentials, setCredentials] = useState({
 		email: "",
 		password: "",
+		role: role,
 	});
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-
-		const user = await authService.login(credentials.email, credentials.password);
-
-		if (user) {
-			authService.setCurrentUser(user);
-			navigate(user.role === "admin" ? "/admin/dashboard" : "/teacher/dashboard", {
-				replace: true,
-			});
+		try {
+			await login(credentials);
+			toast.success("Login successful!");
+			navigate(role === "admin" ? "/admin/dashboard" : "/teacher/dashboard");
+		} catch (error) {
+			console.error("Login failed", error);
+			toast.error("Login failed. Please check your credentials.");
 		}
 	};
 
@@ -59,7 +61,10 @@ const Login = () => {
 									? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-900/20 dark:text-blue-400"
 									: "border-gray-300 bg-white text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
 							}`}
-							onClick={() => setRole("admin")}>
+							onClick={() => {
+								setRole("admin");
+								setCredentials((prev) => ({ ...prev, role: "admin" }));
+							}}>
 							<User className="mr-2 h-5 w-5" />
 							Admin
 						</Button>
@@ -71,7 +76,10 @@ const Login = () => {
 									? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-900/20 dark:text-blue-400"
 									: "border-gray-300 bg-white text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
 							}`}
-							onClick={() => setRole("teacher")}>
+							onClick={() => {
+								setRole("teacher");
+								setCredentials((prev) => ({ ...prev, role: "teacher" }));
+							}}>
 							<School className="mr-2 h-5 w-5" />
 							Teacher
 						</Button>
@@ -166,9 +174,7 @@ const Login = () => {
 				<div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
 					Demo Credentials:
 					<br />
-					Admin: admin@school.com / admin123
-					<br />
-					Teacher: teacher@school.com / teacher123
+					Admin: dariel@university.edu / password123
 				</div>
 			</div>
 		</div>
