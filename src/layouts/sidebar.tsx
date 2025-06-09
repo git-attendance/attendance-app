@@ -1,6 +1,6 @@
 import { APP_CONSTANTS } from "@/configs/app-constants";
 import { getNavigationItems } from "@/configs/navigation-config";
-import { authService } from "@/services/authService";
+import { useAuth } from "@/contexts/auth-context";
 import { X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
@@ -10,7 +10,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
-	const currentUser = authService.getCurrentUser();
+	const { user: currentUser } = useAuth();
 	const isAdmin = currentUser?.role === "admin";
 	const navigation = getNavigationItems(isAdmin ? "admin" : "teacher");
 
@@ -79,7 +79,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 								<span className="text-sm font-medium">
 									{currentUser?.name
 										.split(" ")
-										.map((n) => n[0])
+										.map((n: string) => n[0])
 										.join("")}
 								</span>
 							</div>

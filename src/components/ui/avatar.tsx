@@ -28,7 +28,7 @@ const Avatar = ({ src, alt = "Unknown User", size = "medium", className }: Avata
 	return hasError || !src ? (
 		<div
 			className={twMerge(
-				"rounded-full flex items-center justify-center bg-primary-mild   border-4 border-gray-100 dark:border-gray-800",
+				"rounded-full flex items-center justify-center bg-primary-mild   border-4 border-blue-100 dark:border-blue-800",
 				"font-semibold",
 				sizeClasses,
 				className,
@@ -40,7 +40,7 @@ const Avatar = ({ src, alt = "Unknown User", size = "medium", className }: Avata
 			src={src}
 			alt={alt}
 			className={twMerge(
-				"rounded-full  bg-white border-4 border-gray-100 object-cover",
+				"rounded-full  bg-white border-4 border-blue-100 object-cover",
 				className,
 				sizeClasses,
 			)}

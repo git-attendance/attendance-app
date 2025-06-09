@@ -1,6 +1,7 @@
-import { useAuth } from "@/hooks/use-auth";
+import Avatar from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "@/providers/theme-provider";
-import { Bell, Menu, Moon, Sun, UserCircle } from "lucide-react";
+import { Bell, Menu, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -11,12 +12,11 @@ interface NavbarProps {
 const Navbar = ({ onMenuClick }: NavbarProps) => {
 	const [showDropdown, setShowDropdown] = useState(false);
 	const { theme, setTheme } = useTheme();
-	const authService = useAuth();
+	const { logout, user } = useAuth();
 	const navigate = useNavigate();
 
-	// mocked logout function
 	const handleSignOut = () => {
-		authService.logout();
+		logout();
 		navigate("/login");
 	};
 
@@ -69,11 +69,15 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
 						<button
 							className="flex items-center rounded-full text-sm focus:outline-none"
 							onClick={() => setShowDropdown(!showDropdown)}>
-							<UserCircle className="h-8 w-8 text-gray-500 dark:text-gray-400" />
+							<Avatar
+								src={user?.avatar || "/default-avatar.png"}
+								alt={user?.name || "User Avatar"}
+								size="small"
+							/>
 						</button>
 
 						{showDropdown && (
-							<div className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 dark:bg-gray-800 dark:ring-gray-700">
+							<div className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white border border-gray-200 py-1 shadow-lg  ring-opacity-5 dark:bg-gray-800">
 								<Link
 									to="/settings"
 									className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"

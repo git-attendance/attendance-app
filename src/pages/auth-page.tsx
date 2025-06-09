@@ -3,9 +3,9 @@ import SHS_BUILDING from "@/assets/shs-building.jpg";
 import { useEffect, useState } from "react";
 import { APP_CONSTANTS } from "@/configs/app-constants";
 import Login from "@/components/features/auth/login";
-import { useAuth } from "@/hooks/use-auth";
 import SplashScreen from "@/layouts/splash-screen";
 import RegistrationForm from "@/components/features/auth/registration-form";
+import { useAuth } from "@/contexts/auth-context";
 
 const AuthPage = () => {
 	const location = useLocation();
