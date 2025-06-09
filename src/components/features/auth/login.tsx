@@ -170,6 +170,13 @@ const Login = () => {
 						Sign up
 					</Link>
 				</div>
+				<div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+					Demo Credentials:
+					<br />
+					Admin: admin@university.edu / adminuser123
+					<br />
+					Teacher: teacher@university.edu / teacheruser123
+				</div>
 			</div>
 		</div>
 	);
