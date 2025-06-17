@@ -32,7 +32,25 @@ export const useAuthFetch = (): AuthFetchProps => {
 				});
 
 				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`);
+					let errorBody = null;
+					try {
+						errorBody = await response.json();
+					} catch (_) {
+						errorBody = { message: "Unknown error" };
+					}
+					throw {
+						status: response.status,
+						response: errorBody,
+					};
+				}
+
+				// Handle no-content response (e.g. DELETE 204)
+				if (response.status === 204) {
+					return {
+						success: true,
+						message: "Operation successful",
+						status: 204,
+					};
 				}
 
 				const data = await response.json();

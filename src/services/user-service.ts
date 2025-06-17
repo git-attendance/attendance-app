@@ -20,11 +20,9 @@ export class UserServices extends APIService {
 		return this.asyncFetch.get(url);
 	}
 
-	async getAll(page: number = 1, limit: number = 10) {
+	async getAll() {
 		this.resetQuery();
-		return this.asyncFetch.get(
-			`${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.USER.GET_ALL}${this.query}&page=${page}&limit=${limit}`,
-		);
+		return this.asyncFetch.get(`${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.USER.GET_ALL}`);
 	}
 
 	async update(userId: string, userData: UserModel) {

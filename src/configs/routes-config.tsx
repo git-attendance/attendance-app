@@ -1,8 +1,12 @@
 import { CalendarTemplate } from "@/components/calendar/calendar-template";
+import AccountsPage from "@/pages/accounts-page";
 import Dashboard from "@/pages/admin/dashboard";
+import AttendanceList from "@/pages/attendance-reports-list";
+import AttendanceReports from "@/pages/attendance-reports-page";
 import AuthPage from "@/pages/auth-page";
 import LiveAttendance from "@/pages/live-attendance";
 import MarkAttendance from "@/pages/mark-attendance";
+import MessagesPage from "@/pages/messages-page";
 import StudentAttendance from "@/pages/students/student-attendance";
 import StudentRegister from "@/pages/students/student-register";
 import StudentsPage from "@/pages/students/students-page";
@@ -11,15 +15,20 @@ import Subjects from "@/pages/subjects-page";
 const roleRoutes = [
 	{ path: "dashboard", element: <Dashboard /> },
 	{ path: "calendar", element: <CalendarTemplate /> },
+	{ path: "mark-attendance", element: <MarkAttendance /> },
+	{ path: "students/register", element: <StudentRegister /> },
 ];
 
 const adminOnlyRoutes = [
-	{ path: "mark-attendance", element: <MarkAttendance /> },
 	{ path: "live-attendance", element: <LiveAttendance /> },
-	{ path: "students/register", element: <StudentRegister /> },
 	{ path: "students", element: <StudentsPage /> },
 	{ path: "subjects", element: <Subjects /> },
+	{ path: "accounts", element: <AccountsPage /> },
+	{ path: "messages", element: <MessagesPage /> },
+	{ path: "attendance/report", element: <AttendanceReports /> },
 ];
+
+const teacherOnlyRoutes = [{ path: "attendance/report", element: <AttendanceList /> }];
 
 export const routesConfig = {
 	AUTH: [
@@ -41,6 +50,12 @@ export const routesConfig = {
 		// Admin-only routes
 		...adminOnlyRoutes.map(({ path, element }) => ({
 			path: `/admin/${path}`,
+			element,
+		})),
+
+		// Teacher-only routes
+		...teacherOnlyRoutes.map(({ path, element }) => ({
+			path: `/teacher/${path}`,
 			element,
 		})),
 	],

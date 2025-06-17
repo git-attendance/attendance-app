@@ -1,156 +1,307 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, BookOpen, MapPin, Clock, User, Trash2 } from "lucide-react";
-import { useAttendance } from "@/contexts/attendance-context";
-import Table from "@/components/ui/table";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
+import { useCreateSubject, useDeleteSubject, useSubjects } from "@/hooks/use-subjects";
+import { useUsers } from "@/hooks/use-user";
+import type { UserModel } from "@/models/user-model";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-const Subjects = () => {
-	const { state, addSubject, deleteSubject } = useAttendance();
+export default function Subjects() {
+	const { data: subjects } = useSubjects();
+	const { data: users = [] } = useUsers();
+	const [deleteId, setDeleteId] = useState<string | null>(null);
+
+	const instructors = users.filter((user: UserModel) => user.role === "teacher");
+
+	useEffect(() => {
+		if (instructors.length > 0 && !formData.instructor) {
+			setFormData((prev) => ({
+				...prev,
+				instructor: instructors[0]._id,
+			}));
+		}
+	}, [instructors]);
+
 	const [showAddForm, setShowAddForm] = useState(false);
 	const [formData, setFormData] = useState({
 		name: "",
 		code: "",
+		description: "",
 		instructor: "",
 		room: "",
-		schedule: "",
-		color: "#3B82F6",
+		day: "Monday",
+		startTime: "09:00",
+		endTime: "10:00",
+		semester: "Fall 2025",
 	});
 
-	const handleSubmit = (e: React.FormEvent) => {
+	// const predefinedColors = [
+	// 	"#3B82F6",
+	// 	"#EF4444",
+	// 	"#10B981",
+	// 	"#F59E0B",
+	// 	"#8B5CF6",
+	// 	"#EC4899",
+	// 	"#06B6D4",
+	// 	"#84CC16",
+	// ];
+
+	const createSubject = useCreateSubject();
+	const deleteSubject = useDeleteSubject();
+
+	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		addSubject(formData);
-		setFormData({
-			name: "",
-			code: "",
-			instructor: "",
-			room: "",
-			schedule: "",
-			color: "#3B82F6",
+
+		const payload = {
+			code: formData.code,
+			name: formData.name,
+			description: formData.description,
+
+			schedule: {
+				day: formData.day,
+				startTime: formData.startTime,
+				endTime: formData.endTime,
+				room: formData.room,
+			},
+
+			semester: formData.semester,
+			instructor: formData.instructor,
+		};
+
+		createSubject.mutate(payload, {
+			onSuccess: () => {
+				setShowAddForm(false);
+				setFormData({
+					name: "",
+					code: "",
+					description: "",
+					instructor: instructors[0]?._id ?? "",
+					room: "",
+					day: "Monday",
+					startTime: "09:00",
+					endTime: "10:00",
+					semester: "Fall 2025",
+				});
+			},
 		});
-		setShowAddForm(false);
 	};
 
-	const predefinedColors = [
-		"#3B82F6",
-		"#EF4444",
-		"#10B981",
-		"#F59E0B",
-		"#8B5CF6",
-		"#EC4899",
-		"#06B6D4",
-		"#84CC16",
-	];
+	const handleDelete = (subjectId: string) => {
+		deleteSubject.mutate(subjectId, {});
+	};
 
 	return (
 		<div className="p-6 space-y-6 min-h-screen">
 			<div className="flex justify-between items-center">
 				<div>
-					<h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-						Subjects
-					</h1>
-					<p className="text-gray-600 dark:text-gray-400 mt-2">
-						Manage your school subjects and schedules
-					</p>
+					<h1 className="text-3xl font-bold">Subjects</h1>
+					<p className="text-gray-600 mt-2">Manage your school subjects and schedules</p>
 				</div>
-				<Button
-					onClick={() => setShowAddForm(!showAddForm)}
-					className="flex items-center gap-2">
-					<Plus className="h-4 w-4" />
-					Add Subject
-				</Button>
-			</div>
 
-			{showAddForm && (
-				<Card className="border-dashed bg-white dark:bg-gray-900">
-					<CardHeader>
-						<CardTitle className="dark:text-gray-100">Add New Subject</CardTitle>
-						<CardDescription className="dark:text-gray-400">
-							Enter the details for the new subject
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
+				<Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+					<DialogTrigger asChild>
+						<Button
+							onClick={() => setShowAddForm((prev) => !prev)}
+							className="flex items-center gap-2">
+							<Plus className="h-4 w-4" />
+							Add Subject
+						</Button>
+					</DialogTrigger>
+					<DialogContent className="max-w-2xl">
+						<DialogHeader>
+							<DialogTitle>Add New Subject</DialogTitle>
+							<DialogDescription>
+								Enter the details for the new subject
+							</DialogDescription>
+						</DialogHeader>
+
 						<form onSubmit={handleSubmit} className="space-y-4">
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div>
-									<Label htmlFor="name" className="dark:text-gray-200 mb-2">
+									<Label htmlFor="name" className="mb-2">
 										Subject Name
 									</Label>
 									<Input
 										id="name"
 										value={formData.name}
 										onChange={(e) =>
-											setFormData({ ...formData, name: e.target.value })
+											setFormData({
+												...formData,
+												name: e.target.value,
+											})
 										}
-										placeholder="e.g., Mathematics"
+										placeholder="Mathematics"
 										required
-										className="dark:bg-gray-800 dark:text-gray-100"
 									/>
 								</div>
 								<div>
-									<Label htmlFor="code" className="dark:text-gray-200 mb-2">
+									<Label htmlFor="description" className="mb-2">
+										Description
+									</Label>
+									<Input
+										id="description"
+										value={formData.description}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												description: e.target.value,
+											})
+										}
+										placeholder="Introduction to Mathematics"
+									/>
+								</div>
+								<div>
+									<Label htmlFor="code" className="mb-2">
 										Subject Code
 									</Label>
 									<Input
 										id="code"
 										value={formData.code}
 										onChange={(e) =>
-											setFormData({ ...formData, code: e.target.value })
+											setFormData({
+												...formData,
+												code: e.target.value,
+											})
 										}
-										placeholder="e.g., MATH101"
+										placeholder="MATH101"
 										required
-										className="dark:bg-gray-800 dark:text-gray-100"
 									/>
 								</div>
 								<div>
-									<Label htmlFor="instructor" className="dark:text-gray-200 mb-2">
+									<Label htmlFor="instructor" className="mb-2">
 										Instructor
 									</Label>
-									<Input
+									<select
 										id="instructor"
 										value={formData.instructor}
 										onChange={(e) =>
-											setFormData({ ...formData, instructor: e.target.value })
+											setFormData({
+												...formData,
+												instructor: e.target.value,
+											})
 										}
-										placeholder="e.g., John Smith"
-										required
-										className="dark:bg-gray-800 dark:text-gray-100"
-									/>
+										className="w-full p-2 border rounded">
+										{instructors.map((instr: any) => (
+											<option key={instr._id} value={instr._id}>
+												{instr.name}
+											</option>
+										))}
+									</select>
 								</div>
 								<div>
-									<Label htmlFor="room" className="dark:text-gray-200 mb-2">
+									<Label htmlFor="room" className="mb-2">
 										Room
 									</Label>
 									<Input
 										id="room"
 										value={formData.room}
 										onChange={(e) =>
-											setFormData({ ...formData, room: e.target.value })
+											setFormData({
+												...formData,
+												room: e.target.value,
+											})
 										}
-										placeholder="e.g., Room 201"
+										placeholder="Room 201"
 										required
-										className="dark:bg-gray-800 dark:text-gray-100"
 									/>
 								</div>
 								<div>
-									<Label htmlFor="schedule" className="dark:text-gray-200 mb-2">
-										Schedule
+									<Label htmlFor="day" className="mb-2">
+										Day
 									</Label>
 									<Input
-										id="schedule"
-										value={formData.schedule}
+										id="day"
+										value={formData.day}
 										onChange={(e) =>
-											setFormData({ ...formData, schedule: e.target.value })
+											setFormData({
+												...formData,
+												day: e.target.value,
+											})
 										}
-										placeholder="e.g., Mon-Wed-Fri 9:00-10:00"
 										required
-										className="dark:bg-gray-800 dark:text-gray-100"
 									/>
 								</div>
 								<div>
-									<Label htmlFor="color" className="dark:text-gray-200 mb-2">
+									<Label htmlFor="startTime" className="mb-2">
+										Start Time
+									</Label>
+									<Input
+										type="time"
+										id="startTime"
+										value={formData.startTime}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												startTime: e.target.value,
+											})
+										}
+										required
+									/>
+								</div>
+								<div>
+									<Label htmlFor="endTime" className="mb-2">
+										End Time
+									</Label>
+									<Input
+										type="time"
+										id="endTime"
+										value={formData.endTime}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												endTime: e.target.value,
+											})
+										}
+										required
+									/>
+								</div>
+								<div>
+									<Label htmlFor="semester" className="mb-2">
+										Semester
+									</Label>
+									<Input
+										id="semester"
+										value={formData.semester}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												semester: e.target.value,
+											})
+										}
+										required
+									/>
+								</div>
+								{/* <div>
+									<Label htmlFor="color" className="mb-2">
 										Color
 									</Label>
 									<div className="flex gap-2 mt-2">
@@ -159,84 +310,101 @@ const Subjects = () => {
 												key={color}
 												type="button"
 												onClick={() => setFormData({ ...formData, color })}
-												className={`w-8 h-8 rounded-full border-2 ${
-													formData.color === color
-														? "border-gray-800 dark:border-gray-100"
-														: "border-gray-300 dark:border-gray-700"
-												}`}
+												className={`w-8 h-8 rounded-full border-2 ${formData.color === color ? "border-gray-900" : "border-gray-300"}`}
 												style={{ backgroundColor: color }}
 											/>
 										))}
 									</div>
-								</div>
+								</div> */}
 							</div>
 							<div className="flex gap-2">
 								<Button type="submit">Add Subject</Button>
 								<Button
-									type="button"
 									variant="outline"
+									type="button"
 									onClick={() => setShowAddForm(false)}>
 									Cancel
 								</Button>
 							</div>
 						</form>
-					</CardContent>
-				</Card>
-			)}
+					</DialogContent>
+				</Dialog>
+			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-				{state.subjects?.map((subject) => (
+				{subjects?.map((sub: any) => (
 					<Card
-						key={subject.id}
-						className="relative overflow-hidden bg-white dark:bg-gray-900"
+						key={sub._id}
+						className="relative overflow-hidden bg-white"
 						style={{
-							background: `linear-gradient(135deg, ${subject.color} 0%, ${subject.color}99 100%)`,
+							background: `linear-gradient(135deg, ${sub.instructor ? sub.instructor.color : "#ccc"} 0%, ${sub.instructor ? sub.instructor.color + "99" : "#ccc99"} 100%)`,
 						}}>
-						<CardHeader className="pb-3">
-							<div className="flex justify-between items-start">
-								<div>
-									<CardTitle className="text-lg text-neutral-50 dark:text-neutral-50">
-										{subject.name}
-									</CardTitle>
-									<CardDescription className="font-mono text-sm text-neutral-50 dark:text-neutral-200">
-										{subject.code}
-									</CardDescription>
-								</div>
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={() => deleteSubject(subject.id)}
-									className="text-neutral-200 hover:text-neutral-50 hover:bg-gray-300/50 dark:hover:bg-gray-700/50 rounded-full">
-									<Trash2 className="h-4 w-4" />
-								</Button>
+						<CardHeader className="pb-3 flex justify-between">
+							<div>
+								<CardTitle className="text-lg text-neutral-800">
+									{sub.name}
+								</CardTitle>
+								<CardDescription className="text-xs text-neutral-600 mb-2">
+									{sub.description || "No description available"}
+								</CardDescription>
+								<CardDescription className="font-mono text-sm">
+									{sub.code}
+								</CardDescription>
 							</div>
+							<AlertDialog>
+								<AlertDialogTrigger asChild>
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={() => setDeleteId(sub._id)}>
+										<Trash2 className="h-4 w-4 text-red-500" />
+									</Button>
+								</AlertDialogTrigger>
+								<AlertDialogContent>
+									<AlertDialogHeader>
+										<AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+										<AlertDialogDescription>
+											Are you sure you want to delete this subject?
+										</AlertDialogDescription>
+									</AlertDialogHeader>
+									<AlertDialogFooter>
+										<AlertDialogCancel>Cancel</AlertDialogCancel>
+										<AlertDialogAction
+											className="bg-red-500 text-white hover:bg-red-600"
+											onClick={() => {
+												if (deleteId) handleDelete(deleteId);
+											}}>
+											Delete
+										</AlertDialogAction>
+									</AlertDialogFooter>
+								</AlertDialogContent>
+							</AlertDialog>
 						</CardHeader>
+
 						<CardContent className="space-y-3">
-							<div className="flex items-center gap-2 text-sm text-neutral-50 dark:text-neutral-200">
+							<div className="flex items-center gap-2 text-sm">
 								<User className="h-4 w-4" />
-								<span>{subject.instructor}</span>
+								<span>{sub.instructor?.name || "No instructor assigned"}</span>
 							</div>
-							<div className="flex items-center gap-2 text-sm text-neutral-50 dark:text-neutral-200">
+							<div className="flex items-center gap-2 text-sm">
 								<MapPin className="h-4 w-4" />
-								<span>{subject.room}</span>
+								<span>{sub.schedule.room}</span>
 							</div>
-							<div className="flex items-center gap-2 text-sm text-neutral-50 dark:text-neutral-200">
+							<div className="flex items-center gap-2 text-sm">
 								<Clock className="h-4 w-4" />
-								<span>{subject.schedule}</span>
+								<span>{`${sub.schedule.day} ${sub.schedule.startTime}-${sub.schedule.endTime}`}</span>
 							</div>
 						</CardContent>
 					</Card>
 				))}
 			</div>
 
-			{state.subjects?.length === 0 && !showAddForm && (
-				<Card className="text-center py-12 bg-white dark:bg-gray-900">
+			{subjects?.length === 0 && !showAddForm && (
+				<Card className="text-center py-12 bg-white">
 					<CardContent>
-						<BookOpen className="h-12 w-12 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-						<h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-							No subjects yet
-						</h3>
-						<p className="text-gray-600 dark:text-gray-400 mb-4">
+						<BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+						<h3 className="text-lg font-medium">No subjects yet</h3>
+						<p className="text-gray-600 mb-4">
 							Get started by adding your first subject
 						</p>
 						<Button onClick={() => setShowAddForm(true)}>
@@ -247,84 +415,88 @@ const Subjects = () => {
 				</Card>
 			)}
 
-			{(state.subjects?.length ?? 0) > 0 && (
-				<Card className="bg-white dark:bg-gray-900">
+			{subjects?.length > 0 && (
+				<Card className="bg-white">
 					<CardHeader>
-						<CardTitle className="dark:text-gray-100">All Subjects</CardTitle>
-						<CardDescription className="dark:text-gray-400">
-							Complete list of subjects in the system
-						</CardDescription>
+						<CardTitle>All Subjects</CardTitle>
+						<CardDescription>Complete list of subjects in the system</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<Table className="border-0 w-full">
-							<Table.Head className="bg-white dark:bg-gray-900 border border-x-0 border-t-0 border-gray-100 dark:border-gray-800">
-								<Table.Row>
-									<Table.Cell className="dark:text-gray-200 mb-2">
-										Subject
-									</Table.Cell>
-									<Table.Cell className="dark:text-gray-200 mb-2">
-										Code
-									</Table.Cell>
-									<Table.Cell className="dark:text-gray-200 mb-2">
-										Instructor
-									</Table.Cell>
-									<Table.Cell className="dark:text-gray-200 mb-2">
-										Room
-									</Table.Cell>
-									<Table.Cell className="dark:text-gray-200 mb-2">
-										Schedule
-									</Table.Cell>
-									<Table.Cell className="dark:text-gray-200 mb-2">
-										Actions
-									</Table.Cell>
-								</Table.Row>
-							</Table.Head>
-							<Table.Body>
-								{state.subjects?.map((subject) => (
-									<Table.Row
-										key={subject.id}
-										className="bg-white dark:bg-gray-950">
-										<Table.Cell>
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>Subject</TableHead>
+									<TableHead>Code</TableHead>
+									<TableHead>Instructor</TableHead>
+									<TableHead>Room</TableHead>
+									<TableHead>Schedule</TableHead>
+									<TableHead>Actions</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{subjects?.map((sub: any) => (
+									<TableRow key={sub._id}>
+										<TableCell>
 											<div className="flex items-center gap-3">
 												<div
 													className="w-3 h-3 rounded-full"
-													style={{ backgroundColor: subject.color }}
+													style={{
+														backgroundColor:
+															sub.instructor?.color || "#ccc",
+													}}
 												/>
-												<span className="font-medium dark:text-gray-100">
-													{subject.name}
-												</span>
+												<span className="font-medium">{sub.name}</span>
 											</div>
-										</Table.Cell>
-										<Table.Cell className="font-mono text-sm dark:text-gray-200">
-											{subject.code}
-										</Table.Cell>
-										<Table.Cell className="dark:text-gray-200 mb-2">
-											{subject.instructor}
-										</Table.Cell>
-										<Table.Cell className="dark:text-gray-200 mb-2">
-											{subject.room}
-										</Table.Cell>
-										<Table.Cell className="dark:text-gray-200 mb-2">
-											{subject.schedule}
-										</Table.Cell>
-										<Table.Cell>
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={() => deleteSubject(subject.id)}
-												className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
-												<Trash2 className="h-4 w-4" />
-											</Button>
-										</Table.Cell>
-									</Table.Row>
+										</TableCell>
+										<TableCell className="font-mono text-sm">
+											{sub.code}
+										</TableCell>
+										<TableCell>{sub.instructor?.name}</TableCell>
+										<TableCell>{sub.schedule.room}</TableCell>
+										<TableCell>{`${sub.schedule.day} ${sub.schedule.startTime}-${sub.schedule.endTime}`}</TableCell>
+										<TableCell>
+											<AlertDialog>
+												<AlertDialogTrigger asChild>
+													<Button
+														variant="ghost"
+														size="icon"
+														onClick={() => setDeleteId(sub._id)}>
+														<Trash2 className="h-4 w-4 text-red-500" />
+													</Button>
+												</AlertDialogTrigger>
+												<AlertDialogContent>
+													<AlertDialogHeader>
+														<AlertDialogTitle>
+															Confirm Deletion
+														</AlertDialogTitle>
+														<AlertDialogDescription>
+															Are you sure you want to delete this
+															subject?
+														</AlertDialogDescription>
+													</AlertDialogHeader>
+													<AlertDialogFooter>
+														<AlertDialogCancel>
+															Cancel
+														</AlertDialogCancel>
+														<AlertDialogAction
+															className="bg-red-500 text-white hover:bg-red-600"
+															onClick={() => {
+																if (deleteId)
+																	handleDelete(deleteId);
+															}}>
+															Delete
+														</AlertDialogAction>
+													</AlertDialogFooter>
+												</AlertDialogContent>
+											</AlertDialog>
+										</TableCell>
+									</TableRow>
 								))}
-							</Table.Body>
+							</TableBody>
 						</Table>
 					</CardContent>
 				</Card>
 			)}
 		</div>
 	);
-};
-
-export default Subjects;
+}

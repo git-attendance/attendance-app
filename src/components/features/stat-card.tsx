@@ -5,19 +5,11 @@ type StatCardProps = {
 	title: string;
 	value: number | string;
 	icon: ComponentType<{ className?: string }>;
-	change?: string;
 	changeType?: string;
 	className?: string;
 };
 
-const StatCard = ({
-	title,
-	value,
-	icon: Icon,
-	change,
-	changeType,
-	className = "",
-}: StatCardProps) => {
+const StatCard = ({ title, value, icon: Icon, changeType, className = "" }: StatCardProps) => {
 	const changeColor =
 		changeType === "positive"
 			? "text-green-600"
@@ -31,7 +23,6 @@ const StatCard = ({
 				<div className="p-2 bg-blue-100 rounded-lg dark:bg-gray-700">
 					<Icon className={`h-6 w-6 ${changeColor}`} />
 				</div>
-				{change && <span className={`text-sm font-medium ${changeColor}`}>{change}</span>}
 			</div>
 			<h2 className="text-gray-600 text-sm font-medium">{title}</h2>
 			<p className="text-2xl font-bold text-gray-800 mt-2 dark:text-white">{value}</p>

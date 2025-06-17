@@ -2,7 +2,6 @@ import {
 	BarChart,
 	Calendar,
 	ClipboardCheck,
-	Cog,
 	UserPlus,
 	Users,
 	FileText,
@@ -19,7 +18,16 @@ export const getNavigationItems = (role: "admin" | "teacher") => {
 			href: isAdmin ? "/admin/dashboard" : "/teacher/dashboard",
 			icon: BarChart,
 		},
-		{ name: "Mark Attendance", href: "/admin/mark-attendance", icon: ClipboardCheck },
+		{
+			name: "Mark Attendance",
+			href: isAdmin ? "/admin/mark-attendance" : "/teacher/mark-attendance",
+			icon: ClipboardCheck,
+		},
+		{
+			name: "Register Student",
+			href: isAdmin ? "/admin/students/register" : "teacher/students/register",
+			icon: UserPlus,
+		},
 		{
 			name: "Calendar",
 			href: isAdmin ? "/admin/calendar" : "/teacher/calendar",
@@ -27,7 +35,6 @@ export const getNavigationItems = (role: "admin" | "teacher") => {
 		},
 		...(isAdmin
 			? [
-					{ name: "Register Student", href: "/admin/students/register", icon: UserPlus },
 					{ name: "Students", href: "/admin/students/", icon: Users },
 					{ name: "Subjects", href: "/admin/subjects", icon: BookOpen },
 					{ name: "Accounts", href: "/admin/accounts", icon: Users },
@@ -39,6 +46,5 @@ export const getNavigationItems = (role: "admin" | "teacher") => {
 			href: isAdmin ? "/admin/attendance/report" : "/teacher/attendance/report",
 			icon: FileText,
 		},
-		{ name: "Settings", href: "/settings", icon: Cog },
 	];
 };

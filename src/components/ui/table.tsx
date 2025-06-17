@@ -1,49 +1,114 @@
-import { twMerge } from "tailwind-merge";
+import * as React from "react"
 
-type TableProps = React.TableHTMLAttributes<HTMLTableElement>;
+import { cn } from "@/lib/utils"
 
-const Table = ({ children, className }: TableProps) => {
-	return (
-		<div className="overflow-x-auto">
-			<table className={twMerge("w-full border-collapse border border-gray-300", className)}>
-				{children}
-			</table>
-		</div>
-	);
-};
+function Table({ className, ...props }: React.ComponentProps<"table">) {
+  return (
+    <div
+      data-slot="table-container"
+      className="relative w-full overflow-x-auto"
+    >
+      <table
+        data-slot="table"
+        className={cn("w-full caption-bottom text-sm", className)}
+        {...props}
+      />
+    </div>
+  )
+}
 
-type TableHeadProps = React.TableHTMLAttributes<HTMLTableElement>;
+function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
+  return (
+    <thead
+      data-slot="table-header"
+      className={cn("[&_tr]:border-b", className)}
+      {...props}
+    />
+  )
+}
 
-Table.Head = ({ children, className }: TableHeadProps) => {
-	return <thead className={twMerge("bg-gray-100", className)}>{children}</thead>;
-};
+function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
+  return (
+    <tbody
+      data-slot="table-body"
+      className={cn("[&_tr:last-child]:border-0", className)}
+      {...props}
+    />
+  )
+}
 
-type TableBodyProps = React.TableHTMLAttributes<HTMLTableElement>;
-Table.Body = ({ children, className }: TableBodyProps) => {
-	return <tbody className={twMerge("bg-white", className)}>{children}</tbody>;
-};
+function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
+  return (
+    <tfoot
+      data-slot="table-footer"
+      className={cn(
+        "bg-muted/50 border-t font-medium [&>tr]:last:border-b-0",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 
-type TableRowProps = React.TableHTMLAttributes<HTMLTableRowElement>;
+function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+  return (
+    <tr
+      data-slot="table-row"
+      className={cn(
+        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 
-Table.Row = ({ children, className }: TableRowProps) => {
-	return <tr className={twMerge("border-b border-gray-300", className)}>{children}</tr>;
-};
+function TableHead({ className, ...props }: React.ComponentProps<"th">) {
+  return (
+    <th
+      data-slot="table-head"
+      className={cn(
+        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 
-type TableCellProps = React.TableHTMLAttributes<HTMLTableCellElement> & {
-	colSpan?: number;
-};
+function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+  return (
+    <td
+      data-slot="table-cell"
+      className={cn(
+        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 
-Table.Cell = ({ children, className, colSpan }: TableCellProps) => {
-	return (
-		<td
-			colSpan={colSpan}
-			className={twMerge(
-				"p-2 border border-x-0 border-t-0 border-gray-100 dark:border-gray-800 font-semibold text-primary-mild dark:text-primary-light",
-				className,
-			)}>
-			{children}
-		</td>
-	);
-};
+function TableCaption({
+  className,
+  ...props
+}: React.ComponentProps<"caption">) {
+  return (
+    <caption
+      data-slot="table-caption"
+      className={cn("text-muted-foreground mt-4 text-sm", className)}
+      {...props}
+    />
+  )
+}
 
-export default Table;
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+}
