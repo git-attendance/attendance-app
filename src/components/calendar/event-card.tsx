@@ -2,6 +2,7 @@ import { type CalendarEvent } from "@/models/calendar";
 import { cn } from "@/lib/utils";
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/auth-context";
 
 interface EventCardProps {
 	event: CalendarEvent;
@@ -20,6 +21,8 @@ export const EventCard = ({
 	className,
 	isCompact = false,
 }: EventCardProps) => {
+	const { user } = useAuth();
+	const isAdmin = user?.role === "admin";
 	const handleClick = () => {
 		if (onClick) {
 			onClick(event);
@@ -40,7 +43,7 @@ export const EventCard = ({
 		}
 	};
 
-	const showActions = onEdit || onDelete;
+	const showActions = isAdmin && (onEdit || onDelete);
 
 	return (
 		<div

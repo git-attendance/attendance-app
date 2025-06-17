@@ -123,7 +123,7 @@ const StudentAttendance = () => {
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 				{/* Face Recognition Section */}
-				<Card>
+				<Card className="dark:bg-gray-800 dark:text-white">
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
 							<Camera className="h-5 w-5" />
@@ -227,7 +227,7 @@ const StudentAttendance = () => {
 				</Card>
 
 				{/* Today's Status */}
-				<Card>
+				<Card className="dark:bg-gray-800 dark:text-white">
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2">
 							<Clock className="h-5 w-5" />
@@ -296,7 +296,7 @@ const StudentAttendance = () => {
 			</div>
 
 			{/* Recent Check-ins */}
-			<Card>
+			<Card className="dark:bg-gray-800 dark:text-white">
 				<CardHeader>
 					<CardTitle>Recent Check-ins Today ({todayAttendance.length})</CardTitle>
 				</CardHeader>

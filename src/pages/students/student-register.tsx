@@ -11,22 +11,23 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { UserPlus, Camera, ArrowLeft } from "lucide-react";
-import { useAttendance } from "@/contexts/attendance-context";
 import { toast } from "sonner";
 import FaceCapture from "@/components/features/register-face-capture";
+import { useStudent } from "@/hooks/use-student";
 
 const StudentRegister = () => {
-	const { addStudent } = useAttendance();
+	const { create } = useStudent();
 	const [step, setStep] = useState<"form" | "capture">("form");
 	const [formData, setFormData] = useState({
-		fullName: "",
+		firstName: "",
+		lastName: "",
+		middleName: "",
 		studentId: "",
-		grade: "",
+		gradeLevel: "",
 		section: "",
 		strand: "",
 		email: "",
 	});
-	const [capturedImages, setCapturedImages] = useState<string[]>([]);
 
 	const handleInputChange = (field: string, value: string) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
@@ -34,66 +35,74 @@ const StudentRegister = () => {
 
 	const handleFormSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
+		const requiredFields = ["firstName", "lastName", "studentId", "gradeLevel", "section"];
+		const missing = requiredFields.filter((field) => !formData[field as keyof typeof formData]);
 
-		if (!formData.fullName || !formData.studentId || !formData.grade || !formData.section) {
-			toast.warning("Missing Information, Please fill in all required fields.");
+		if (missing.length > 0) {
+			toast.warning("Please fill in all required fields.");
 			return;
 		}
 
 		setStep("capture");
 	};
 
-	const handleFaceCapture = (images: string[]) => {
-		setCapturedImages(images);
+	const handleFaceCapture = () => {
+		toast.info("Face images capture is coming soon.");
 	};
 
-	const handleComplete = () => {
-		const studentData = {
-			...formData,
-			photoUrl: capturedImages[0], // Use first captured image as profile photo
-			faceDescriptors: [], // In real implementation, this would contain processed face data
-		};
+	const handleComplete = async () => {
+		try {
+			await create.mutateAsync({
+				...formData,
+				personId: "", // Will be handled by face enrollment logic if needed
+			});
+			toast.success("Student registered successfully.");
+			resetForm();
+		} catch (err) {
+			toast.error("Failed to register student.");
+			console.error(err);
+		}
+	};
 
-		addStudent(studentData);
-
-		// Reset form
+	const resetForm = () => {
 		setFormData({
-			fullName: "",
+			firstName: "",
+			lastName: "",
+			middleName: "",
 			studentId: "",
-			grade: "",
+			gradeLevel: "",
 			section: "",
 			strand: "",
 			email: "",
 		});
-		setCapturedImages([]);
+
 		setStep("form");
 	};
 
 	const goBack = () => {
 		setStep("form");
-		setCapturedImages([]);
 	};
 
 	if (step === "capture") {
 		return (
 			<div className="space-y-6">
-				<div className="flex items-center space-x-4">
+				<div className="flex justify-between items-center">
+					<div>
+						<h1 className="text-3xl font-bold">Face Registration</h1>
+						<p className="text-muted-foreground mt-2">
+							Capture face images for {formData.firstName} {formData.lastName}
+						</p>
+					</div>
 					<Button variant="outline" onClick={goBack} className="flex items-center gap-2">
 						<ArrowLeft className="h-4 w-4" />
 						Back to Form
 					</Button>
-					<div>
-						<h1 className="text-3xl font-bold">Face Registration</h1>
-						<p className="text-gray-600 mt-2">
-							Capture face images for {formData.fullName}
-						</p>
-					</div>
 				</div>
 
 				<FaceCapture
 					onCapture={handleFaceCapture}
 					onComplete={handleComplete}
-					studentName={formData.fullName}
+					studentName={`${formData.firstName} ${formData.lastName}`}
 				/>
 			</div>
 		);
@@ -103,12 +112,12 @@ const StudentRegister = () => {
 		<div className="space-y-6">
 			<div>
 				<h1 className="text-3xl font-bold">Register New Student</h1>
-				<p className="text-gray-600 mt-2">
+				<p className="text-muted-foreground mt-2">
 					Add student information and capture face data for attendance tracking
 				</p>
 			</div>
 
-			<Card className="mx-auto dark:bg-gray-800">
+			<Card className="mx-auto">
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<UserPlus className="h-5 w-5" />
@@ -118,102 +127,64 @@ const StudentRegister = () => {
 				<CardContent>
 					<form onSubmit={handleFormSubmit} className="space-y-6">
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<div className="space-y-2">
-								<Label htmlFor="fullName">Full Name *</Label>
-								<Input
-									id="fullName"
-									value={formData.fullName}
-									onChange={(e) => handleInputChange("fullName", e.target.value)}
-									placeholder="Enter full name"
-									required
-								/>
-							</div>
+							<InputGroup
+								label="First Name *"
+								id="firstName"
+								value={formData.firstName}
+								onChange={handleInputChange}
+							/>
+							<InputGroup
+								label="Last Name *"
+								id="lastName"
+								value={formData.lastName}
+								onChange={handleInputChange}
+							/>
+							<InputGroup
+								label="Middle Name"
+								id="middleName"
+								value={formData.middleName}
+								onChange={handleInputChange}
+							/>
+							<InputGroup
+								label="Student ID *"
+								id="studentId"
+								value={formData.studentId}
+								onChange={handleInputChange}
+							/>
+							<SelectGroup
+								label="Grade Level *"
+								id="gradeLevel"
+								value={formData.gradeLevel}
+								options={["7", "8", "9", "10", "11", "12"]}
+								onChange={handleInputChange}
+							/>
+							<InputGroup
+								label="Section *"
+								id="section"
+								value={formData.section}
+								onChange={handleInputChange}
+							/>
+							<SelectGroup
+								label="Strand (Grades 11–12)"
+								id="strand"
+								value={formData.strand}
+								options={["STEM", "HUMSS", "ABM", "GAS", "TVL"]}
+								onChange={handleInputChange}
+								disabled={
+									formData.gradeLevel !== "11" && formData.gradeLevel !== "12"
+								}
+							/>
 
-							<div className="space-y-2">
-								<Label htmlFor="studentId">Student ID *</Label>
-								<Input
-									id="studentId"
-									value={formData.studentId}
-									onChange={(e) => handleInputChange("studentId", e.target.value)}
-									placeholder="Enter student ID"
-									required
-								/>
-							</div>
-
-							<div className="space-y-2">
-								<Label htmlFor="grade">Grade Level *</Label>
-								<Select
-									value={formData.grade}
-									onValueChange={(value) => handleInputChange("grade", value)}>
-									<SelectTrigger>
-										<SelectValue placeholder="Select grade" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="7">Grade 7</SelectItem>
-										<SelectItem value="8">Grade 8</SelectItem>
-										<SelectItem value="9">Grade 9</SelectItem>
-										<SelectItem value="10">Grade 10</SelectItem>
-										<SelectItem value="11">Grade 11</SelectItem>
-										<SelectItem value="12">Grade 12</SelectItem>
-									</SelectContent>
-								</Select>
-							</div>
-
-							<div className="space-y-2">
-								<Label htmlFor="section">Section *</Label>
-								<Input
-									id="section"
-									value={formData.section}
-									onChange={(e) => handleInputChange("section", e.target.value)}
-									placeholder="e.g., PYTHAGORAS, EINSTEIN"
-									required
-								/>
-							</div>
-
-							<div className="space-y-2">
-								<Label htmlFor="strand">Strand (Grades 11-12)</Label>
-								<Select
-									value={formData.strand}
-									onValueChange={(value) => handleInputChange("strand", value)}>
-									<SelectTrigger>
-										<SelectValue placeholder="Select strand" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="STEM">STEM</SelectItem>
-										<SelectItem value="HUMSS">HUMSS</SelectItem>
-										<SelectItem value="ABM">ABM</SelectItem>
-										<SelectItem value="GAS">GAS</SelectItem>
-										<SelectItem value="TVL">TVL</SelectItem>
-									</SelectContent>
-								</Select>
-							</div>
-
-							<div className="space-y-2">
-								<Label htmlFor="email">Email Address</Label>
-								<Input
-									id="email"
-									type="email"
-									value={formData.email}
-									onChange={(e) => handleInputChange("email", e.target.value)}
-									placeholder="student@email.com"
-								/>
-							</div>
+							<InputGroup
+								label="Email Address"
+								id="email"
+								value={formData.email}
+								onChange={handleInputChange}
+							/>
 						</div>
 
 						<div className="flex justify-end space-x-3 pt-4 border-t">
-							<Button
-								type="button"
-								variant="outline"
-								onClick={() => {
-									setFormData({
-										fullName: "",
-										studentId: "",
-										grade: "",
-										section: "",
-										strand: "",
-										email: "",
-									});
-								}}>
+							<Button type="button" variant="outline" onClick={resetForm}>
 								Clear Form
 							</Button>
 							<Button type="submit" className="flex items-center gap-2">
@@ -225,20 +196,20 @@ const StudentRegister = () => {
 				</CardContent>
 			</Card>
 
-			{/* Preview Card */}
-			{formData.fullName && (
-				<Card className=" mx-auto border-dashed border-2 border-blue-300 bg-blue-50 dark:bg-blue-900/10">
+			{formData.firstName && (
+				<Card className="mx-auto border-dashed border-2 border-blue-300 bg-blue-50 dark:bg-blue-900/10">
 					<CardContent className="p-4">
 						<h3 className="font-medium text-blue-900 mb-2">Student Preview</h3>
-						<div className="text-sm text-blue-700">
+						<div className="text-sm text-blue-700 space-y-1">
 							<p>
-								<strong>Name:</strong> {formData.fullName}
+								<strong>Name:</strong> {formData.firstName} {formData.middleName}{" "}
+								{formData.lastName}
 							</p>
 							<p>
 								<strong>ID:</strong> {formData.studentId}
 							</p>
 							<p>
-								<strong>Grade & Section:</strong> {formData.grade} -{" "}
+								<strong>Grade & Section:</strong> {formData.gradeLevel} -{" "}
 								{formData.section}
 							</p>
 							{formData.strand && (
@@ -255,3 +226,59 @@ const StudentRegister = () => {
 };
 
 export default StudentRegister;
+
+// Reusable input component
+const InputGroup = ({
+	label,
+	id,
+	value,
+	onChange,
+}: {
+	label: string;
+	id: string;
+	value: string;
+	onChange: (field: string, value: string) => void;
+}) => (
+	<div className="space-y-2">
+		<Label htmlFor={id}>{label}</Label>
+		<Input
+			id={id}
+			value={value}
+			onChange={(e) => onChange(id, e.target.value)}
+			placeholder={`Enter ${label.toLowerCase()}`}
+			required={label.includes("*")}
+		/>
+	</div>
+);
+
+const SelectGroup = ({
+	label,
+	id,
+	value,
+	options,
+	onChange,
+	disabled = false,
+}: {
+	label: string;
+	id: string;
+	value: string;
+	options: string[];
+	onChange: (field: string, value: string) => void;
+	disabled?: boolean;
+}) => (
+	<div className="space-y-2">
+		<Label htmlFor={id}>{label}</Label>
+		<Select value={value} onValueChange={(val) => onChange(id, val)} disabled={disabled}>
+			<SelectTrigger>
+				<SelectValue placeholder={`Select ${label.toLowerCase()}`} />
+			</SelectTrigger>
+			<SelectContent>
+				{options.map((option) => (
+					<SelectItem key={option} value={option}>
+						{option}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
+	</div>
+);

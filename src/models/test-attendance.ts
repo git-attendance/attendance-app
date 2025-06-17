@@ -18,6 +18,7 @@ export interface AttendanceRecord {
 	timeOut: Date | null;
 	status: "ENROLLED" | "ABSENT" | "LATE";
 	date: string;
+	remarks?: string;
 }
 
 export interface Subject {

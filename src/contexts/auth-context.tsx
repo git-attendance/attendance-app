@@ -1,6 +1,7 @@
 import type { UserModel } from "@/models/user-model";
 import { AuthService } from "@/services/auth-service";
 import { UserServices } from "@/services/user-service";
+import { isTokenExpired } from "@/utils/token-check";
 import { createContext, useContext, useEffect, useState } from "react";
 
 type AuthContextType = {
@@ -35,8 +36,14 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		const storedAuth = localStorage.getItem("auth");
 		if (storedAuth) {
 			const parsedAuth = JSON.parse(storedAuth);
+			const isExpired = isTokenExpired(parsedAuth.token);
 			setToken(parsedAuth.token);
 			setUser(parsedAuth.user);
+			if (isExpired) {
+				console.warn("Token expired. Logging out.");
+				logout();
+				return;
+			}
 
 			if (!parsedAuth.user) {
 				authService
@@ -69,22 +76,19 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		if (userId) {
 			userService.get(userId).then((userData) => {
 				setUserInfo(userData);
-				console.log("Fetched user details:", userData);
 			});
 		}
 	};
 
 	const login = async (credentials: any) => {
 		const data = await authService.login(credentials);
-		console.log("Login response data:", data);
+
 		if (data?.token) {
 			localStorage.setItem("auth", JSON.stringify({ token: data.token, user: data.user }));
 			setToken(data.token);
 			setUser(data.user);
 			setIsAuthenticated(true);
-			console.log("User logged in:", data.user);
-			console.log("Token set:", data.token);
-			console.log("Is authenticated:", isAuthenticated);
+
 			fetchUserDetails(data.user._id);
 		}
 	};

@@ -5,12 +5,10 @@ import { useAttendance } from "@/contexts/attendance-context";
 import { useAuth } from "@/contexts/auth-context";
 import { formatDate } from "@/utils/common";
 import { format } from "date-fns";
-import { UserCheck, Users } from "lucide-react";
+import { UserCheck } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
-	const navigate = useNavigate();
 	const { user } = useAuth();
 	const [dateTime, setDateTime] = useState(new Date());
 	const { state } = useAttendance();
@@ -56,7 +54,6 @@ const Dashboard = () => {
 						title={stat.title}
 						value={stat.value}
 						icon={stat.icon}
-						change={stat.change}
 						changeType={stat.changeType}
 					/>
 				))}
@@ -90,10 +87,10 @@ const Dashboard = () => {
 									return (
 										<div
 											key={record.id}
-											className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+											className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
 											<div className="flex items-center space-x-3">
-												<div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-													<span className="text-blue-600 font-semibold">
+												<div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+													<span className="text-blue-600 dark:text-blue-300 font-semibold">
 														{student.fullName
 															.split(" ")
 															.map((n) => n[0])
@@ -101,19 +98,21 @@ const Dashboard = () => {
 													</span>
 												</div>
 												<div>
-													<p className="font-medium text-gray-900">
+													<p className="font-medium text-gray-900 dark:text-white">
 														{student.fullName}
 													</p>
-													<p className="text-sm text-gray-500">
+													<p className="text-sm text-gray-500 dark:text-gray-300">
 														{student.section} - {student.strand}
 													</p>
 												</div>
 											</div>
 											<div className="text-right">
-												<p className="text-sm font-medium text-gray-900">
+												<p className="text-sm font-medium text-gray-900 dark:text-white">
 													{format(new Date(record.timeIn), "h:mm aa")}
 												</p>
-												<p className="text-xs text-green-600">Present</p>
+												<p className="text-xs text-green-600 dark:text-green-400">
+													Present
+												</p>
 											</div>
 										</div>
 									);
@@ -124,7 +123,7 @@ const Dashboard = () => {
 			</Card>
 
 			{/* Quick Actions */}
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 ">
+			{/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ">
 				<Card
 					className="cursor-pointer hover:shadow-lg transition-shadow dark:bg-gray-800 "
 					onClick={() => navigate("/admin/live-attendance")}>
@@ -150,7 +149,7 @@ const Dashboard = () => {
 						</p>
 					</CardContent>
 				</Card>
-			</div>
+			</div> */}
 		</div>
 	);
 };
