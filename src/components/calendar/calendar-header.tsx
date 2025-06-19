@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CalendarView } from "@/models/calendar";
 import { formatMonthYear } from "@/utils/calendar-utils";
-import { useAuth } from "@/contexts/auth-context";
+// import { useAuth } from "@/contexts/auth-context";
 
 interface CalendarHeaderProps {
 	currentDate: Date;
@@ -29,8 +29,8 @@ export const CalendarHeader = ({
 		{ label: "Month", value: "month" },
 	];
 
-	const { user } = useAuth();
-	const isAdmin = user?.role === "admin";
+	// const { user } = useAuth();
+	// const isAdmin = user?.role === "admin";
 
 	return (
 		<div className="flex items-center justify-between p-4 border-gray-200 dark:text-gray-50">
@@ -41,12 +41,12 @@ export const CalendarHeader = ({
 				<Button onClick={onToday} variant="outline" size="sm">
 					Today
 				</Button>
-				{isAdmin && (
-					<Button variant="outline" size="sm" onClick={onCreateEventClick}>
-						Create Event
-						<Plus className="w-4 h-4 ml-2" />
-					</Button>
-				)}
+				{/* {isAdmin && ( */}
+				<Button variant="outline" size="sm" onClick={onCreateEventClick}>
+					Create Event
+					<Plus className="w-4 h-4 ml-2" />
+				</Button>
+				{/* )} */}
 			</div>
 
 			<div className="flex items-center space-x-4">

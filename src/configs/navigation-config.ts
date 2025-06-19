@@ -11,6 +11,7 @@ import {
 
 export const getNavigationItems = (role: "admin" | "teacher") => {
 	const isAdmin = role === "admin";
+	const isTeacher = role === "teacher";
 
 	return [
 		{
@@ -19,26 +20,30 @@ export const getNavigationItems = (role: "admin" | "teacher") => {
 			icon: BarChart,
 		},
 		{
-			name: "Mark Attendance",
-			href: isAdmin ? "/admin/mark-attendance" : "/teacher/mark-attendance",
-			icon: ClipboardCheck,
-		},
-		{
-			name: "Register Student",
-			href: isAdmin ? "/admin/students/register" : "teacher/students/register",
-			icon: UserPlus,
-		},
-		{
 			name: "Calendar",
 			href: isAdmin ? "/admin/calendar" : "/teacher/calendar",
 			icon: Calendar,
 		},
 		...(isAdmin
 			? [
+					{
+						name: "Register Student",
+						href: "/admin/students/register",
+						icon: UserPlus,
+					},
 					{ name: "Students", href: "/admin/students/", icon: Users },
 					{ name: "Subjects", href: "/admin/subjects", icon: BookOpen },
 					{ name: "Accounts", href: "/admin/accounts", icon: Users },
 					{ name: "Messages", href: "/admin/messages", icon: Mail },
+				]
+			: []),
+		...(isTeacher
+			? [
+					{
+						name: "Mark Attendance",
+						href: "/teacher/mark-attendance",
+						icon: ClipboardCheck,
+					},
 				]
 			: []),
 		{
