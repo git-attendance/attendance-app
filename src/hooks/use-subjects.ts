@@ -91,14 +91,29 @@ export const useUpdateSubject = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ id, data }: { id: string; data: Partial<SubjectModel> }) =>
+		mutationFn: ({ id, data }: { id: string; data: CreateSubjectPayload }) =>
 			subjectService.update(id, data),
-		onSuccess: (_data, variables, _context) => {
-			toast.success("Subject updated successfully");
-			queryClient.invalidateQueries({ queryKey: subjectKeys.byId(variables.id) });
+		onMutate: async ({ id, data }) => {
+			await queryClient.cancelQueries({ queryKey: subjectKeys.all });
+
+			const previousSubjects = queryClient.getQueryData<SubjectModel[]>(subjectKeys.all);
+
+			queryClient.setQueryData(subjectKeys.all, (old: SubjectModel[] = []) =>
+				old.map((subject) => (subject._id === id ? { ...subject, ...data } : subject)),
+			);
+
+			return { previousSubjects };
 		},
-		onError: (err: any) => {
-			toast.error(err?.response?.data?.error?.message || "Failed to update subject.");
+		onError: (err: any, _vars, context) => {
+			toast.error(err?.response?.message || "Failed to update subject.");
+			if (context?.previousSubjects) {
+				queryClient.setQueryData(subjectKeys.all, context.previousSubjects);
+			}
+		},
+		onSuccess: (_res: any, vars) => {
+			toast.success("Subject updated successfully");
+			queryClient.invalidateQueries({ queryKey: subjectKeys.byId(vars.id) });
+			queryClient.invalidateQueries({ queryKey: subjectKeys.all });
 		},
 	});
 };

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, BookOpen, MapPin, Clock, User, Trash2 } from "lucide-react";
+import { Plus, BookOpen, MapPin, Clock, User, Trash2, Pencil } from "lucide-react";
 import {
 	Table,
 	TableBody,
@@ -12,7 +12,12 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { useCreateSubject, useDeleteSubject, useSubjects } from "@/hooks/use-subjects";
+import {
+	useCreateSubject,
+	useDeleteSubject,
+	useSubjects,
+	useUpdateSubject,
+} from "@/hooks/use-subjects";
 import { useUsers } from "@/hooks/use-user";
 import type { UserModel } from "@/models/user-model";
 import {
@@ -34,11 +39,13 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { formatTime } from "@/utils/common";
 
 export default function Subjects() {
 	const { data: subjects } = useSubjects();
 	const { data: users = [] } = useUsers();
 	const [deleteId, setDeleteId] = useState<string | null>(null);
+	const [editingSubject, setEditingSubject] = useState<any>(null);
 
 	const instructors = users.filter((user: UserModel) => user.role === "teacher");
 
@@ -64,18 +71,8 @@ export default function Subjects() {
 		semester: "Fall 2025",
 	});
 
-	// const predefinedColors = [
-	// 	"#3B82F6",
-	// 	"#EF4444",
-	// 	"#10B981",
-	// 	"#F59E0B",
-	// 	"#8B5CF6",
-	// 	"#EC4899",
-	// 	"#06B6D4",
-	// 	"#84CC16",
-	// ];
-
 	const createSubject = useCreateSubject();
+	const updateSubject = useUpdateSubject();
 	const deleteSubject = useDeleteSubject();
 
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -97,22 +94,55 @@ export default function Subjects() {
 			instructor: formData.instructor,
 		};
 
-		createSubject.mutate(payload, {
-			onSuccess: () => {
-				setShowAddForm(false);
-				setFormData({
-					name: "",
-					code: "",
-					description: "",
-					instructor: instructors[0]?._id ?? "",
-					room: "",
-					day: "Monday",
-					startTime: "09:00",
-					endTime: "10:00",
-					semester: "Fall 2025",
-				});
-			},
+		if (editingSubject) {
+			updateSubject.mutate(
+				{ id: editingSubject._id, data: payload },
+				{
+					onSuccess: () => {
+						setShowAddForm(false);
+						resetForm();
+						setEditingSubject(null);
+					},
+				},
+			);
+		} else {
+			createSubject.mutate(payload, {
+				onSuccess: () => {
+					setShowAddForm(false);
+					resetForm();
+				},
+			});
+		}
+	};
+
+	const resetForm = () => {
+		setFormData({
+			name: "",
+			code: "",
+			description: "",
+			instructor: instructors[0]?._id ?? "",
+			room: "",
+			day: "Monday",
+			startTime: "09:00",
+			endTime: "10:00",
+			semester: "Fall 2025",
 		});
+	};
+
+	const handleEdit = (subject: any) => {
+		setEditingSubject(subject);
+		setFormData({
+			name: subject.name,
+			code: subject.code,
+			description: subject.description,
+			instructor: subject.instructor?._id || instructors[0]?._id || "",
+			room: subject.schedule.room,
+			day: subject.schedule.day,
+			startTime: subject.schedule.startTime,
+			endTime: subject.schedule.endTime,
+			semester: subject.semester,
+		});
+		setShowAddForm(true);
 	};
 
 	const handleDelete = (subjectId: string) => {
@@ -127,7 +157,17 @@ export default function Subjects() {
 					<p className="text-gray-600 mt-2">Manage your school subjects and schedules</p>
 				</div>
 
-				<Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+				<Dialog
+					open={showAddForm}
+					onOpenChange={(open) => {
+						if (!open) {
+							setShowAddForm(false);
+							setEditingSubject(null);
+							resetForm();
+						} else {
+							setShowAddForm(true);
+						}
+					}}>
 					<DialogTrigger asChild>
 						<Button
 							onClick={() => setShowAddForm((prev) => !prev)}
@@ -138,9 +178,13 @@ export default function Subjects() {
 					</DialogTrigger>
 					<DialogContent className="max-w-2xl">
 						<DialogHeader>
-							<DialogTitle>Add New Subject</DialogTitle>
+							<DialogTitle>
+								{editingSubject ? "Edit Subject" : "Add New Subject"}
+							</DialogTitle>
 							<DialogDescription>
-								Enter the details for the new subject
+								{editingSubject
+									? "Update the subject details"
+									: "Enter the details for the new subject"}
 							</DialogDescription>
 						</DialogHeader>
 
@@ -300,29 +344,19 @@ export default function Subjects() {
 										required
 									/>
 								</div>
-								{/* <div>
-									<Label htmlFor="color" className="mb-2">
-										Color
-									</Label>
-									<div className="flex gap-2 mt-2">
-										{predefinedColors.map((color) => (
-											<button
-												key={color}
-												type="button"
-												onClick={() => setFormData({ ...formData, color })}
-												className={`w-8 h-8 rounded-full border-2 ${formData.color === color ? "border-gray-900" : "border-gray-300"}`}
-												style={{ backgroundColor: color }}
-											/>
-										))}
-									</div>
-								</div> */}
 							</div>
 							<div className="flex gap-2">
-								<Button type="submit">Add Subject</Button>
+								<Button type="submit">
+									{editingSubject ? "Update Subject" : "Add Subject"}
+								</Button>
 								<Button
 									variant="outline"
 									type="button"
-									onClick={() => setShowAddForm(false)}>
+									onClick={() => {
+										setShowAddForm(false);
+										setEditingSubject(null);
+										resetForm();
+									}}>
 									Cancel
 								</Button>
 							</div>
@@ -351,34 +385,39 @@ export default function Subjects() {
 									{sub.code}
 								</CardDescription>
 							</div>
-							<AlertDialog>
-								<AlertDialogTrigger asChild>
-									<Button
-										variant="ghost"
-										size="icon"
-										onClick={() => setDeleteId(sub._id)}>
-										<Trash2 className="h-4 w-4 text-red-500" />
-									</Button>
-								</AlertDialogTrigger>
-								<AlertDialogContent>
-									<AlertDialogHeader>
-										<AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-										<AlertDialogDescription>
-											Are you sure you want to delete this subject?
-										</AlertDialogDescription>
-									</AlertDialogHeader>
-									<AlertDialogFooter>
-										<AlertDialogCancel>Cancel</AlertDialogCancel>
-										<AlertDialogAction
-											className="bg-red-500 text-white hover:bg-red-600"
-											onClick={() => {
-												if (deleteId) handleDelete(deleteId);
-											}}>
-											Delete
-										</AlertDialogAction>
-									</AlertDialogFooter>
-								</AlertDialogContent>
-							</AlertDialog>
+							<div className="flex gap-2">
+								<Button variant="ghost" size="icon" onClick={() => handleEdit(sub)}>
+									<Pencil className="h-4 w-4 text-blue-500" />
+								</Button>
+								<AlertDialog>
+									<AlertDialogTrigger asChild>
+										<Button
+											variant="ghost"
+											size="icon"
+											onClick={() => setDeleteId(sub._id)}>
+											<Trash2 className="h-4 w-4 text-red-500" />
+										</Button>
+									</AlertDialogTrigger>
+									<AlertDialogContent>
+										<AlertDialogHeader>
+											<AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+											<AlertDialogDescription>
+												Are you sure you want to delete this subject?
+											</AlertDialogDescription>
+										</AlertDialogHeader>
+										<AlertDialogFooter>
+											<AlertDialogCancel>Cancel</AlertDialogCancel>
+											<AlertDialogAction
+												className="bg-red-500 text-white hover:bg-red-600"
+												onClick={() => {
+													if (deleteId) handleDelete(deleteId);
+												}}>
+												Delete
+											</AlertDialogAction>
+										</AlertDialogFooter>
+									</AlertDialogContent>
+								</AlertDialog>
+							</div>
 						</CardHeader>
 
 						<CardContent className="space-y-3">
@@ -392,7 +431,9 @@ export default function Subjects() {
 							</div>
 							<div className="flex items-center gap-2 text-sm">
 								<Clock className="h-4 w-4" />
-								<span>{`${sub.schedule.day} ${sub.schedule.startTime}-${sub.schedule.endTime}`}</span>
+								<span>
+									{`${sub.schedule.day} ${formatTime(sub.schedule.startTime)}-${formatTime(sub.schedule.endTime)}`}
+								</span>
 							</div>
 						</CardContent>
 					</Card>
@@ -454,7 +495,13 @@ export default function Subjects() {
 										<TableCell>{sub.instructor?.name}</TableCell>
 										<TableCell>{sub.schedule.room}</TableCell>
 										<TableCell>{`${sub.schedule.day} ${sub.schedule.startTime}-${sub.schedule.endTime}`}</TableCell>
-										<TableCell>
+										<TableCell className="flex gap-2">
+											<Button
+												variant="ghost"
+												size="icon"
+												onClick={() => handleEdit(sub)}>
+												<Pencil className="h-4 w-4 text-blue-500" />
+											</Button>
 											<AlertDialog>
 												<AlertDialogTrigger asChild>
 													<Button

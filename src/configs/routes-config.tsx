@@ -15,20 +15,22 @@ import Subjects from "@/pages/subjects-page";
 const roleRoutes = [
 	{ path: "dashboard", element: <Dashboard /> },
 	{ path: "calendar", element: <CalendarTemplate /> },
-	{ path: "mark-attendance", element: <MarkAttendance /> },
-	{ path: "students/register", element: <StudentRegister /> },
 ];
 
 const adminOnlyRoutes = [
 	{ path: "live-attendance", element: <LiveAttendance /> },
 	{ path: "students", element: <StudentsPage /> },
+	{ path: "students/register", element: <StudentRegister /> },
 	{ path: "subjects", element: <Subjects /> },
 	{ path: "accounts", element: <AccountsPage /> },
 	{ path: "messages", element: <MessagesPage /> },
 	{ path: "attendance/report", element: <AttendanceReports /> },
 ];
 
-const teacherOnlyRoutes = [{ path: "attendance/report", element: <AttendanceList /> }];
+const teacherOnlyRoutes = [
+	{ path: "attendance/report", element: <AttendanceList /> },
+	{ path: "mark-attendance", element: <MarkAttendance /> },
+];
 
 export const routesConfig = {
 	AUTH: [

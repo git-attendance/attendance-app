@@ -236,3 +236,14 @@ export const deepDecodeHtml = <T>(obj: T): T => {
 
 	return obj;
 };
+
+export const formatTime = (time: string): string => {
+	const [hours, minutes] = time.split(":").map(Number);
+	if (isNaN(hours) || isNaN(minutes)) return "Invalid time";
+
+	const formattedHours = hours % 12 || 12; // Convert 0-23 to 1-12
+	const formattedMinutes = minutes.toString().padStart(2, "0");
+	const suffix = hours >= 12 ? "PM" : "AM";
+
+	return `${formattedHours}:${formattedMinutes} ${suffix}`;
+};
