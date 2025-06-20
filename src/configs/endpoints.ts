@@ -71,8 +71,19 @@ export const API_ENDPOINTS = {
 		BASE: "/student",
 		CREATE: "/student",
 		GET_BY_ID: "/student/:id",
-		UPDATE: "/student/:id",
+		UPDATE: "/student",
 		DELETE: "/student/:id",
 		SEARCH: "/student/search",
+	},
+
+	ATTENDANCE: {
+		BASE: "/attendance",
+		TODAY: "/attendance/today",
+		BY_STUDENT: "/attendance/student/:id",
+		BY_STUDENT_AND_SUBJECT: "/attendance/student/:studentId/subject/:subjectId",
+		BY_SUBJECT: "/attendance/subject/:id",
+		STATS: "/attendance/subject/:id/stats",
+		SUBJECT_STUDENTS_STATUS: "/attendance/subject/:id/students",
+		PROCESS: "/attendance/process",
 	},
 };

@@ -1,5 +1,5 @@
-export interface AttendanceModel extends Document {
-	userId: string;
+export interface AttendanceModel {
+	studentId: string;
 	subjectId: string;
 	personId: string; // Luxand person ID
 	checkInTime: Date;

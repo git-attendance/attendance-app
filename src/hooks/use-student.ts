@@ -1,4 +1,3 @@
-// src/hooks/use-student.ts
 import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { StudentService } from "@/services/student-service";
@@ -32,11 +31,12 @@ export const useStudent = () => {
 	});
 
 	const update = useMutation({
-		mutationFn: ({ id, data }: { id: string; data: Partial<StudentModel> }) =>
-			service.update(id, data),
-		onSuccess: (_, { id }) => {
+		mutationFn: (data: Partial<StudentModel>) => service.update(data),
+		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({ queryKey: ["students"] });
-			queryClient.invalidateQueries({ queryKey: ["students", id] });
+			if (variables._id) {
+				queryClient.invalidateQueries({ queryKey: ["students", variables._id] });
+			}
 		},
 	});
 

@@ -22,22 +22,27 @@ import {
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
+import { EditStudentModal } from "@/components/modals/edit-student";
+import type { StudentModel } from "@/models/student-model";
+import { useState } from "react";
+import { DeleteDialog } from "@/components/dialogs/delete-dialog";
 
 const StudentsPage = () => {
-	const { getAll } = useStudent();
+	const { getAll, remove } = useStudent();
 	const { data: students } = getAll();
 	const navigate = useNavigate();
 	const { user } = useAuth();
 	const role = user?.role;
 
-	// const getAttendanceStatus = (studentId: string) => {
-	// 	const today = new Date().toDateString();
-	// 	const todayAttendance = attendanceRecords.find(
-	// 		(record) =>
-	// 			record.studentId === studentId && new Date(record.timeIn).toDateString() === today,
-	// 	);
-	// 	return todayAttendance ? "Present" : "Absent";
-	// };
+	const [selectedStudent, setSelectedStudent] = useState<StudentModel | null>(null);
+	const [isEditOpen, setEditOpen] = useState(false);
+	const [isDeleteOpen, setDeleteOpen] = useState(false);
+
+	// When edit button is clicked:
+	const handleEdit = (student: StudentModel) => {
+		setSelectedStudent(student);
+		setEditOpen(true);
+	};
 
 	const getStrandColor = (strand?: string) => {
 		switch (strand?.toLowerCase()) {
@@ -62,6 +67,26 @@ const StudentsPage = () => {
 			return;
 		}
 		navigate(`/${role}/students/register`);
+	};
+
+	const handleDeleteClick = (student: StudentModel) => {
+		setSelectedStudent(student);
+		setDeleteOpen(true);
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!selectedStudent) return;
+
+		try {
+			await remove.mutateAsync(selectedStudent._id);
+			toast.success("Student deleted successfully.");
+		} catch (error) {
+			toast.error("Failed to delete student.");
+			console.error(error);
+		} finally {
+			setDeleteOpen(false);
+			setSelectedStudent(null);
+		}
 	};
 
 	return (
@@ -263,11 +288,16 @@ const StudentsPage = () => {
 																<Eye className="h-4 w-4 mr-2" />
 																View Details
 															</DropdownMenuItem>
-															<DropdownMenuItem>
+															<DropdownMenuItem
+																onClick={() => handleEdit(student)}>
 																<Edit className="h-4 w-4 mr-2" />
 																Edit Student
 															</DropdownMenuItem>
-															<DropdownMenuItem className="text-red-600">
+															<DropdownMenuItem
+																onClick={() =>
+																	handleDeleteClick(student)
+																}
+																className="text-red-600">
 																<Trash2 className="h-4 w-4 mr-2" />
 																Delete Student
 															</DropdownMenuItem>
@@ -281,6 +311,23 @@ const StudentsPage = () => {
 							</Table>
 						</div>
 					)}
+					<EditStudentModal
+						open={isEditOpen}
+						onClose={() => setEditOpen(false)}
+						student={selectedStudent}
+					/>
+					<DeleteDialog
+						isOpen={isDeleteOpen}
+						onClose={() => {
+							setDeleteOpen(false);
+							setSelectedStudent(null);
+						}}
+						onConfirm={handleConfirmDelete}
+						title="Delete Student"
+						description={`Are you sure you want to delete ${selectedStudent?.firstName} ${selectedStudent?.lastName}? This action cannot be undone.`}
+						confirmLabel="Delete Student"
+						confirmClassName="bg-red-600 hover:bg-red-700"
+					/>
 				</CardContent>
 			</Card>
 		</div>

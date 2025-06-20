@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
 import { toast } from "sonner";
+import InputWithToggle from "@/components/ui/input-toggle";
 
 const Login = () => {
 	const { login } = useAuth();
@@ -31,7 +32,7 @@ const Login = () => {
 	};
 
 	return (
-		<div className="flex w-full min-h-screen items-center justify-center bg-sky-50 px-4 py-12 dark:bg-gray-900 sm:px-6 lg:px-8">
+		<div className="flex w-full min-h-screen items-center justify-center bg-gradient-to-br from-blue-200 via-white to-indigo-50 dark:from-blue-950 dark:via-gray-900 dark:to-gray-800 sm:px-6 lg:px-8">
 			<div className="w-full max-w-md space-y-8">
 				<div className="text-center">
 					<img className="size-30 mx-auto" src={APP_CONSTANTS.APP_LOGO} />
@@ -110,12 +111,8 @@ const Login = () => {
 							<label htmlFor="password" className="sr-only">
 								Password
 							</label>
-							<Input
-								id="password"
+							<InputWithToggle
 								name="password"
-								type="password"
-								autoComplete="current-password"
-								required
 								className="input w-full"
 								placeholder="Password"
 								value={credentials.password}
@@ -131,7 +128,7 @@ const Login = () => {
 
 					<div className="flex items-center justify-between">
 						<div className="flex items-center">
-							<Input
+							{/* <Input
 								id="remember-me"
 								name="remember-me"
 								type="checkbox"
@@ -141,7 +138,7 @@ const Login = () => {
 								htmlFor="remember-me"
 								className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
 								Remember me
-							</label>
+							</label> */}
 						</div>
 
 						<div className="text-sm">
@@ -170,13 +167,13 @@ const Login = () => {
 						Sign up
 					</Link>
 				</div>
-				<div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+				{/* <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
 					Demo Credentials:
 					<br />
 					Admin: admin@university.edu / adminuser123
 					<br />
 					Teacher: teacher@university.edu / teacheruser123
-				</div>
+				</div> */}
 			</div>
 		</div>
 	);

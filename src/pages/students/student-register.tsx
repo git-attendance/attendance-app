@@ -18,6 +18,7 @@ import { useStudent } from "@/hooks/use-student";
 const StudentRegister = () => {
 	const { create } = useStudent();
 	const [step, setStep] = useState<"form" | "capture">("form");
+
 	const [formData, setFormData] = useState({
 		firstName: "",
 		lastName: "",
@@ -27,13 +28,14 @@ const StudentRegister = () => {
 		section: "",
 		strand: "",
 		email: "",
+		personId: "", // placeholder, might be updated post-face enrollment
 	});
 
 	const handleInputChange = (field: string, value: string) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
 
-	const handleFormSubmit = (e: React.FormEvent) => {
+	const handleFormSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		const requiredFields = ["firstName", "lastName", "studentId", "gradeLevel", "section"];
 		const missing = requiredFields.filter((field) => !formData[field as keyof typeof formData]);
@@ -42,7 +44,14 @@ const StudentRegister = () => {
 			toast.warning("Please fill in all required fields.");
 			return;
 		}
-
+		try {
+			await create.mutateAsync(formData);
+			toast.success("Student registered successfully.");
+			resetForm();
+		} catch (err) {
+			toast.error("Failed to register student.");
+			console.error(err);
+		}
 		setStep("capture");
 	};
 
@@ -52,10 +61,7 @@ const StudentRegister = () => {
 
 	const handleComplete = async () => {
 		try {
-			await create.mutateAsync({
-				...formData,
-				personId: "", // Will be handled by face enrollment logic if needed
-			});
+			await create.mutateAsync(formData);
 			toast.success("Student registered successfully.");
 			resetForm();
 		} catch (err) {
@@ -74,8 +80,8 @@ const StudentRegister = () => {
 			section: "",
 			strand: "",
 			email: "",
+			personId: "",
 		});
-
 		setStep("form");
 	};
 
@@ -109,7 +115,7 @@ const StudentRegister = () => {
 	}
 
 	return (
-		<div className="space-y-6">
+		<div className="max-w-4xl mx-auto space-y-6 ">
 			<div>
 				<h1 className="text-3xl font-bold">Register New Student</h1>
 				<p className="text-muted-foreground mt-2">
@@ -117,7 +123,7 @@ const StudentRegister = () => {
 				</p>
 			</div>
 
-			<Card className="mx-auto">
+			<Card className="dark:bg-gray-800 bg-white shadow-md">
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<UserPlus className="h-5 w-5" />
@@ -128,53 +134,57 @@ const StudentRegister = () => {
 					<form onSubmit={handleFormSubmit} className="space-y-6">
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 							<InputGroup
-								label="First Name *"
-								id="firstName"
-								value={formData.firstName}
-								onChange={handleInputChange}
-							/>
-							<InputGroup
-								label="Last Name *"
-								id="lastName"
-								value={formData.lastName}
-								onChange={handleInputChange}
-							/>
-							<InputGroup
-								label="Middle Name"
-								id="middleName"
-								value={formData.middleName}
-								onChange={handleInputChange}
-							/>
-							<InputGroup
 								label="Student ID *"
 								id="studentId"
 								value={formData.studentId}
 								onChange={handleInputChange}
 							/>
-							<SelectGroup
-								label="Grade Level *"
-								id="gradeLevel"
-								value={formData.gradeLevel}
-								options={["7", "8", "9", "10", "11", "12"]}
-								onChange={handleInputChange}
-							/>
+
 							<InputGroup
 								label="Section *"
 								id="section"
 								value={formData.section}
 								onChange={handleInputChange}
 							/>
-							<SelectGroup
-								label="Strand (Grades 11–12)"
-								id="strand"
-								value={formData.strand}
-								options={["STEM", "HUMSS", "ABM", "GAS", "TVL"]}
-								onChange={handleInputChange}
-								disabled={
-									formData.gradeLevel !== "11" && formData.gradeLevel !== "12"
-								}
-							/>
-
+							<div className="flex space-x-2">
+								<InputGroup
+									label="First Name *"
+									id="firstName"
+									value={formData.firstName}
+									onChange={handleInputChange}
+								/>
+								<InputGroup
+									label="Last Name *"
+									id="lastName"
+									value={formData.lastName}
+									onChange={handleInputChange}
+								/>
+								<InputGroup
+									label="Middle Name"
+									id="middleName"
+									value={formData.middleName}
+									onChange={handleInputChange}
+								/>
+							</div>
+							<div className="flex space-x-2">
+								<SelectGroup
+									label="Grade Level *"
+									id="gradeLevel"
+									value={formData.gradeLevel}
+									options={["7", "8", "9", "10", "11", "12"]}
+									onChange={handleInputChange}
+								/>
+								<SelectGroup
+									label="Strand (Grades 11–12)"
+									id="strand"
+									value={formData.strand}
+									options={["STEM", "HUMSS", "ABM", "GAS", "TVL"]}
+									onChange={handleInputChange}
+									disabled={
+										formData.gradeLevel !== "11" && formData.gradeLevel !== "12"
+									}
+								/>
+							</div>
 							<InputGroup
 								label="Email Address"
 								id="email"

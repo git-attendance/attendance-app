@@ -18,7 +18,7 @@ const MainLayout = () => {
 	}, [theme]);
 
 	return (
-		<div className="flex h-screen overflow-hidden ">
+		<div className="flex h-screen overflow-hidden bg-gradient-to-br from-blue-200 via-white to-indigo-50 dark:from-blue-950 dark:via-gray-900 dark:to-gray-800">
 			{/* Sidebar */}
 			<Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
