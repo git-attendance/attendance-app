@@ -7,50 +7,66 @@ import { Camera, Check, UserCheck, Clock, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useAttendance } from "@/contexts/attendance-context";
 import { toast } from "sonner";
+import { CameraSelector } from "@/components/features/camera-selector";
+import { useCamera } from "@/hooks/use-camera";
 
 const StudentAttendance = () => {
 	const { state, markAttendance } = useAttendance();
-	const videoRef = useRef<HTMLVideoElement>(null);
+	const videoRef = useRef<HTMLVideoElement>(null) as React.RefObject<HTMLVideoElement>;
 	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const [isStreaming, setIsStreaming] = useState(false);
+	// const [isStreaming, setIsStreaming] = useState(false);
 	const [studentId, setStudentId] = useState("");
 	const [recognizedStudent, setRecognizedStudent] = useState<any>(null);
 	const [isProcessing, setIsProcessing] = useState(false);
-
+	const {
+		devices,
+		selectedDeviceId,
+		setSelectedDeviceId,
+		startCamera,
+		stopCamera,
+		switchCamera,
+		isLoading,
+		isStreaming,
+	} = useCamera({
+		onError: (error) => {
+			toast.error(error);
+			setIsProcessing(false);
+		},
+	});
 	const today = new Date().toDateString();
 	const todayAttendance = state.attendanceRecords.filter(
 		(record) => new Date(record.timeIn).toDateString() === today,
 	);
 
-	const startCamera = useCallback(async () => {
-		try {
-			const stream = await navigator.mediaDevices.getUserMedia({
-				video: {
-					width: 640,
-					height: 480,
-					facingMode: "user",
-				},
-			});
+	// const startCamera = useCallback(async () => {
+	// 	try {
+	// 		const stream = await navigator.mediaDevices.getUserMedia({
+	// 			video: {
+	// 				width: 640,
+	// 				height: 480,
+	// 				facingMode: "user",
+	// 			},
+	// 		});
 
-			if (videoRef.current) {
-				videoRef.current.srcObject = stream;
-				setIsStreaming(true);
-			}
-		} catch (error) {
-			console.error("Error accessing camera:", error);
-			toast.error("Unable to access camera. Please check your permissions.");
-			setIsStreaming(false);
-		}
-	}, []);
+	// 		if (videoRef.current) {
+	// 			videoRef.current.srcObject = stream;
+	// 			setIsStreaming(true);
+	// 		}
+	// 	} catch (error) {
+	// 		console.error("Error accessing camera:", error);
+	// 		toast.error("Unable to access camera. Please check your permissions.");
+	// 		setIsStreaming(false);
+	// 	}
+	// }, []);
 
-	const stopCamera = useCallback(() => {
-		if (videoRef.current?.srcObject) {
-			const stream = videoRef.current.srcObject as MediaStream;
-			stream.getTracks().forEach((track) => track.stop());
-			videoRef.current.srcObject = null;
-			setIsStreaming(false);
-		}
-	}, []);
+	// const stopCamera = useCallback(() => {
+	// 	if (videoRef.current?.srcObject) {
+	// 		const stream = videoRef.current.srcObject as MediaStream;
+	// 		stream.getTracks().forEach((track) => track.stop());
+	// 		videoRef.current.srcObject = null;
+	// 		setIsStreaming(false);
+	// 	}
+	// }, []);
 
 	const simulateFaceRecognition = useCallback(() => {
 		if (!studentId.trim()) {
@@ -112,9 +128,11 @@ const StudentAttendance = () => {
 	};
 
 	return (
-		<div className="max-w-4xl mx-auto space-y-6">
+		<div className="space-y-6">
 			<div>
-				<h1 className="text-3xl font-bold text-gray-900">Student Attendance</h1>
+				<h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+					Student Attendance
+				</h1>
 				<p className="text-gray-600 mt-2">
 					Use face recognition to mark your attendance -{" "}
 					{format(new Date(), "EEEE, MMMM d, yyyy")}
@@ -131,6 +149,15 @@ const StudentAttendance = () => {
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="space-y-4">
+						{/* Camera Selector */}
+						<CameraSelector
+							devices={devices}
+							selectedDeviceId={selectedDeviceId}
+							onDeviceChange={setSelectedDeviceId}
+							disabled={isProcessing || isLoading}
+							isStreaming={isStreaming}
+							switchCamera={switchCamera}
+						/>
 						{/* Student ID Input */}
 						<div className="space-y-2">
 							<Label htmlFor="studentId">Student ID or Name</Label>
@@ -192,7 +219,9 @@ const StudentAttendance = () => {
 						{/* Controls */}
 						<div className="flex gap-3">
 							{!isStreaming && !recognizedStudent && (
-								<Button onClick={startCamera} className="flex items-center gap-2">
+								<Button
+									onClick={() => startCamera(videoRef)}
+									className="flex items-center gap-2">
 									<Camera className="h-4 w-4" />
 									Start Camera
 								</Button>
@@ -294,72 +323,6 @@ const StudentAttendance = () => {
 					</CardContent>
 				</Card>
 			</div>
-
-			{/* Recent Check-ins */}
-			<Card className="dark:bg-gray-800 dark:text-white">
-				<CardHeader>
-					<CardTitle>Recent Check-ins Today ({todayAttendance.length})</CardTitle>
-				</CardHeader>
-				<CardContent>
-					{todayAttendance.length === 0 ? (
-						<div className="text-center py-8 text-gray-500">
-							<UserCheck className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-							<p>No check-ins recorded today</p>
-						</div>
-					) : (
-						<div className="space-y-3">
-							{todayAttendance
-								.sort(
-									(a, b) =>
-										new Date(b.timeIn).getTime() - new Date(a.timeIn).getTime(),
-								)
-								.slice(0, 10)
-								.map((record) => {
-									const student = state.students.find(
-										(s) => s.id === record.studentId,
-									);
-									if (!student) return null;
-
-									return (
-										<div
-											key={record.id}
-											className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-											<div className="flex items-center space-x-3">
-												<div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-													<span className="text-blue-600 font-semibold text-sm">
-														{student.fullName
-															.split(" ")
-															.map((n) => n[0])
-															.join("")}
-													</span>
-												</div>
-												<div>
-													<p className="font-medium text-gray-900">
-														{student.fullName}
-													</p>
-													<p className="text-sm text-gray-500">
-														{student.section}
-													</p>
-												</div>
-											</div>
-											<div className="text-right">
-												<p className="text-sm font-medium text-gray-900">
-													{format(new Date(record.timeIn), "h:mm aa")}
-												</p>
-												<div className="flex items-center gap-1">
-													<div className="w-2 h-2 bg-green-500 rounded-full"></div>
-													<span className="text-xs text-green-600">
-														Present
-													</span>
-												</div>
-											</div>
-										</div>
-									);
-								})}
-						</div>
-					)}
-				</CardContent>
-			</Card>
 		</div>
 	);
 };

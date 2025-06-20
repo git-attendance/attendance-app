@@ -176,7 +176,7 @@ export default function Subjects() {
 							Add Subject
 						</Button>
 					</DialogTrigger>
-					<DialogContent className="max-w-2xl">
+					<DialogContent className="min-w-2xl dark:bg-gray-950">
 						<DialogHeader>
 							<DialogTitle>
 								{editingSubject ? "Edit Subject" : "Add New Subject"}
@@ -369,19 +369,19 @@ export default function Subjects() {
 				{subjects?.map((sub: any) => (
 					<Card
 						key={sub._id}
-						className="relative overflow-hidden bg-white"
+						className="relative overflow-hidden dark:bg-gray-800 dark:text-white shadow-lg hover:shadow-xl transition-shadow duration-300"
 						style={{
 							background: `linear-gradient(135deg, ${sub.instructor ? sub.instructor.color : "#ccc"} 0%, ${sub.instructor ? sub.instructor.color + "99" : "#ccc99"} 100%)`,
 						}}>
 						<CardHeader className="pb-3 flex justify-between">
 							<div>
-								<CardTitle className="text-lg text-neutral-800">
+								<CardTitle className="text-lg font-semibold text-neutral-900 dark:text-white">
 									{sub.name}
 								</CardTitle>
-								<CardDescription className="text-xs text-neutral-600 mb-2">
+								<CardDescription className="text-xs text-neutral-600 dark:text-neutral-200 mb-2">
 									{sub.description || "No description available"}
 								</CardDescription>
-								<CardDescription className="font-mono text-sm">
+								<CardDescription className="font-mono text-sm dark:text-gray-300">
 									{sub.code}
 								</CardDescription>
 							</div>
@@ -441,7 +441,7 @@ export default function Subjects() {
 			</div>
 
 			{subjects?.length === 0 && !showAddForm && (
-				<Card className="text-center py-12 bg-white">
+				<Card className="text-center py-12 dark:bg-gray-800 bg-white">
 					<CardContent>
 						<BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
 						<h3 className="text-lg font-medium">No subjects yet</h3>
@@ -457,7 +457,7 @@ export default function Subjects() {
 			)}
 
 			{subjects?.length > 0 && (
-				<Card className="bg-white">
+				<Card className="dark:bg-gray-800 bg-white">
 					<CardHeader>
 						<CardTitle>All Subjects</CardTitle>
 						<CardDescription>Complete list of subjects in the system</CardDescription>

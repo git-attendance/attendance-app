@@ -1,4 +1,3 @@
-// src/services/student-service.ts
 import { useAuthFetch } from "@/hooks/use-auth-fetch";
 import { APIService } from "./api-service";
 import { API_ENDPOINTS } from "@/configs/endpoints";
@@ -34,8 +33,8 @@ export class StudentService extends APIService {
 		});
 	}
 
-	async update(studentId: string, studentData: Partial<StudentModel>) {
-		const url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.STUDENTS.UPDATE.replace(":id", studentId)}`;
+	async update(studentData: Partial<StudentModel>) {
+		const url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.STUDENTS.UPDATE}`;
 		return this.asyncFetch.put(url, {
 			body: JSON.stringify(studentData),
 			headers: {

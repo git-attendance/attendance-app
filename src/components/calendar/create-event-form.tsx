@@ -162,7 +162,7 @@ export const CreateEventModal = ({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={handleClose}>
-			<DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+			<DialogContent className="max-w-2xl p-6 overflow-y-auto dark:bg-gray-900 dark:text-white">
 				<DialogHeader>
 					<DialogTitle>{editingEvent ? "Edit Event" : "Create New Event"}</DialogTitle>
 				</DialogHeader>
@@ -226,12 +226,14 @@ export const CreateEventModal = ({
 													</Button>
 												</FormControl>
 											</PopoverTrigger>
-											<PopoverContent className="w-auto p-0" align="start">
+											<PopoverContent
+												className="w-auto p-0  flex flex-col"
+												align="start">
 												<Calendar
 													mode="single"
 													selected={field.value}
 													onSelect={field.onChange}
-													initialFocus
+													autoFocus
 													className={cn("p-3 pointer-events-auto")}
 												/>
 											</PopoverContent>
@@ -270,7 +272,7 @@ export const CreateEventModal = ({
 													mode="single"
 													selected={field.value}
 													onSelect={field.onChange}
-													initialFocus
+													autoFocus
 													className={cn("p-3 pointer-events-auto")}
 												/>
 											</PopoverContent>
