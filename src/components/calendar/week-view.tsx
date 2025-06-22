@@ -1,15 +1,15 @@
 import { cn } from "@/lib/utils";
-import type { CalendarEvent } from "@/models/calendar";
 import { getEventsForDate } from "@/utils/calendar-utils";
 import { EventCard } from "./event-card";
+import type { EventModel } from "@/models/event-model";
 
 interface WeekViewProps {
 	currentDate: Date;
-	events: CalendarEvent[];
+	events: EventModel[];
 	selectedDate?: Date;
 	onDateSelect: (date: Date) => void;
-	onEventClick: (event: CalendarEvent) => void;
-	onEditEvent?: (event: CalendarEvent) => void;
+	onEventClick: (event: EventModel) => void;
+	onEditEvent?: (event: EventModel) => void;
 	onDeleteEvent?: (eventId: string) => void;
 }
 
@@ -122,7 +122,7 @@ export const WeekView = ({
 										<div className="space-y-1">
 											{dayEvents.slice(0, 2).map((event) => (
 												<EventCard
-													key={event.id}
+													key={event._id}
 													event={event}
 													onClick={onEventClick}
 													onEdit={onEditEvent}

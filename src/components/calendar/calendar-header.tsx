@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { CalendarView } from "@/models/calendar";
 import { formatMonthYear } from "@/utils/calendar-utils";
+import type { CalendarView } from "@/models/event-model";
 // import { useAuth } from "@/contexts/auth-context";
 
 interface CalendarHeaderProps {

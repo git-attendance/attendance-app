@@ -253,7 +253,7 @@ export default function Subjects() {
 												instructor: e.target.value,
 											})
 										}
-										className="w-full p-2 border rounded">
+										className="w-full p-2 border rounded dark:bg-gray-800 dark:text-white">
 										{instructors.map((instr: any) => (
 											<option key={instr._id} value={instr._id}>
 												{instr.name}

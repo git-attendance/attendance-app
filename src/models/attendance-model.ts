@@ -10,3 +10,11 @@ export interface AttendanceModel {
 	createdAt: Date;
 	updatedAt: Date;
 }
+
+export interface AttendanceSummaryResponse {
+	date: string;
+	total: number;
+	present: number;
+	absent: number;
+	records: AttendanceModel[];
+}

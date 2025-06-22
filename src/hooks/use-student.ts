@@ -51,6 +51,18 @@ export const useStudent = () => {
 		mutationFn: (query: Partial<StudentModel>) => service.search(query),
 	});
 
+	const uploadImage = useMutation({
+		mutationFn: (payload: { studentId: string; file: File }) =>
+			service.uploadImage(payload.studentId, payload.file),
+		onSuccess: (_, { studentId }) => {
+			queryClient.invalidateQueries({ queryKey: ["students", studentId] });
+		},
+	});
+
+	const exportCSV = useMutation({
+		mutationFn: () => service.exportCSV(),
+	});
+
 	return {
 		getAll,
 		getById,
@@ -58,5 +70,7 @@ export const useStudent = () => {
 		update,
 		remove,
 		search,
+		uploadImage,
+		exportCSV,
 	};
 };

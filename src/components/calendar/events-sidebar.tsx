@@ -1,14 +1,15 @@
 import { cn } from "@/lib/utils";
-import type { CalendarEvent, EventType } from "@/models/calendar";
 import { formatDate } from "@/utils/calendar-utils";
 import { EventCard } from "./event-card";
+import type { EventModel } from "@/models/event-model";
+import type { EventTypeMeta } from "@/configs/event-types";
 
 interface EventsSidebarProps {
 	selectedDate: Date;
-	events: CalendarEvent[];
-	eventTypes: EventType[];
-	onEventClick: (event: CalendarEvent) => void;
-	onEditEvent: (event: CalendarEvent) => void;
+	events: EventModel[];
+	eventTypes: EventTypeMeta[];
+	onEventClick: (event: EventModel) => void;
+	onEditEvent: (event: EventModel) => void;
 	onDeleteEvent: (eventId: string) => void;
 }
 
@@ -35,7 +36,7 @@ export const EventsSidebar = ({
 				<div className="space-y-3">
 					{events.map((event) => (
 						<EventCard
-							key={event.id}
+							key={event._id}
 							event={event}
 							onClick={onEventClick}
 							onEdit={onEditEvent}

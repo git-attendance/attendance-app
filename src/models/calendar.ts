@@ -14,13 +14,3 @@ export interface EventType {
 	color: string;
 	bgColor: string;
 }
-
-export type CalendarView = "month" | "week" | "day";
-
-export interface CalendarViewProps {
-	currentDate: Date;
-	events: CalendarEvent[];
-	view: CalendarView;
-	onDateSelect: (date: Date) => void;
-	onEventClick: (event: CalendarEvent) => void;
-}

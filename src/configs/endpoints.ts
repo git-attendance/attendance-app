@@ -18,7 +18,7 @@ export const SOCKET_URL = isLocalhost
 			? ""
 			: "";
 
-export const FACE_BASE_URL = "https:/.luxand.cloud";
+export const FACE_BASE_URL = "https://api.luxand.cloud";
 export const FACE_TOKEN = "f491b27fcab246a6a35632e1756b373c";
 
 export const API_ENDPOINTS = {
@@ -50,10 +50,10 @@ export const API_ENDPOINTS = {
 
 	EVENTS: {
 		GET_ALL: "/event",
-		GET_BY_ID: "/events/get/:id",
-		CREATE: "/events/",
-		UPDATE: "/events/update/:id",
-		REMOVE: "/events/remove/:id",
+		GET_BY_ID: "/event/get/:id",
+		CREATE: "/event",
+		UPDATE: "/event/:id",
+		REMOVE: "/event/:id",
 	},
 
 	SUBJECTS: {
@@ -74,16 +74,19 @@ export const API_ENDPOINTS = {
 		UPDATE: "/student",
 		DELETE: "/student/:id",
 		SEARCH: "/student/search",
+		UPLOAD_IMAGE: "/student/:id/upload-image",
+		EXPORT_CSV: "/student/export/csv",
 	},
 
 	ATTENDANCE: {
-		BASE: "/attendance",
-		TODAY: "/attendance/today",
-		BY_STUDENT: "/attendance/student/:id",
-		BY_STUDENT_AND_SUBJECT: "/attendance/student/:studentId/subject/:subjectId",
-		BY_SUBJECT: "/attendance/subject/:id",
-		STATS: "/attendance/subject/:id/stats",
-		SUBJECT_STUDENTS_STATUS: "/attendance/subject/:id/students",
+		ENROLL: "/attendance/enroll",
 		PROCESS: "/attendance/process",
+		TODAY: "/attendance/today",
+		HISTORY: "/attendance/history",
+		STUDENT_STATUS: "/attendance/student-status",
+		SUBJECT_STATS: "/attendance/subject/:subjectId/stats",
+		SUBJECT_STUDENTS_STATUS: "/attendance/subject/:subjectId/students-status",
+		TEST_SMS: "/attendance/test-sms",
+		OVERALL_STATS: "/attendance/stats",
 	},
 };

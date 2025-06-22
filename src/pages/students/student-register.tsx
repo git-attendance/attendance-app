@@ -1,23 +1,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { UserPlus, Camera, ArrowLeft } from "lucide-react";
+import { UserPlus, Camera, ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import FaceCapture from "@/components/features/register-face-capture";
 import { useStudent } from "@/hooks/use-student";
+import { InputGroup } from "@/components/features/input-group";
+import { SelectGroup } from "@/components/features/select-group";
 
 const StudentRegister = () => {
 	const { create } = useStudent();
-	const [step, setStep] = useState<"form" | "capture">("form");
+	const [step, setStep] = useState<"form" | "guardian" | "capture" | "complete">("form");
 
 	const [formData, setFormData] = useState({
 		firstName: "",
@@ -28,46 +21,71 @@ const StudentRegister = () => {
 		section: "",
 		strand: "",
 		email: "",
-		personId: "", // placeholder, might be updated post-face enrollment
 	});
+
+	const [guardianData, setGuardianData] = useState({
+		firstName: "",
+		lastName: "",
+		middleName: "",
+		email: "",
+		phoneNumber: "",
+	});
+
+	const [createdStudent, setCreatedStudent] = useState<null | { _id: string; fullName: string }>(
+		null,
+	);
 
 	const handleInputChange = (field: string, value: string) => {
 		setFormData((prev) => ({ ...prev, [field]: value }));
 	};
 
-	const handleFormSubmit = async (e: React.FormEvent) => {
+	const handleGuardianChange = (field: string, value: string) => {
+		setGuardianData((prev) => ({ ...prev, [field]: value }));
+	};
+
+	const handleFormSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		const requiredFields = ["firstName", "lastName", "studentId", "gradeLevel", "section"];
 		const missing = requiredFields.filter((field) => !formData[field as keyof typeof formData]);
 
 		if (missing.length > 0) {
-			toast.warning("Please fill in all required fields.");
+			toast.warning("Please fill in all required student fields.");
 			return;
 		}
-		try {
-			await create.mutateAsync(formData);
-			toast.success("Student registered successfully.");
-			resetForm();
-		} catch (err) {
-			toast.error("Failed to register student.");
-			console.error(err);
-		}
-		setStep("capture");
+
+		setStep("guardian");
 	};
 
-	const handleFaceCapture = () => {
-		toast.info("Face images capture is coming soon.");
+	const handleGuardianSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!guardianData.firstName || !guardianData.lastName || !guardianData.email) {
+			toast.warning("Please complete required guardian fields.");
+			return;
+		}
+
+		try {
+			const payload = {
+				...formData,
+				guardian: guardianData,
+				personId: "", // initial blank value
+			};
+			const { _id } = await create.mutateAsync(payload);
+			setCreatedStudent({ _id, fullName: `${formData.firstName} ${formData.lastName}` });
+			toast.success("Student and guardian info saved. Proceed to face capture.");
+			setStep("capture");
+		} catch (error) {
+			console.error(error);
+			toast.error("Failed to save student with guardian info.");
+		}
 	};
 
-	const handleComplete = async () => {
-		try {
-			await create.mutateAsync(formData);
-			toast.success("Student registered successfully.");
-			resetForm();
-		} catch (err) {
-			toast.error("Failed to register student.");
-			console.error(err);
-		}
+	const handleFaceCaptureSuccess = () => {
+		setStep("complete");
+	};
+
+	const handleComplete = () => {
+		resetForm();
+		toast.success("Student registration complete.");
 	};
 
 	const resetForm = () => {
@@ -80,8 +98,15 @@ const StudentRegister = () => {
 			section: "",
 			strand: "",
 			email: "",
-			personId: "",
 		});
+		setGuardianData({
+			firstName: "",
+			lastName: "",
+			middleName: "",
+			email: "",
+			phoneNumber: "",
+		});
+		setCreatedStudent(null);
 		setStep("form");
 	};
 
@@ -89,14 +114,14 @@ const StudentRegister = () => {
 		setStep("form");
 	};
 
-	if (step === "capture") {
+	if (step === "capture" && createdStudent) {
 		return (
 			<div className="space-y-6">
 				<div className="flex justify-between items-center">
 					<div>
 						<h1 className="text-3xl font-bold">Face Registration</h1>
 						<p className="text-muted-foreground mt-2">
-							Capture face images for {formData.firstName} {formData.lastName}
+							Capture face for {createdStudent.fullName}
 						</p>
 					</div>
 					<Button variant="outline" onClick={goBack} className="flex items-center gap-2">
@@ -106,16 +131,92 @@ const StudentRegister = () => {
 				</div>
 
 				<FaceCapture
-					onCapture={handleFaceCapture}
-					onComplete={handleComplete}
-					studentName={`${formData.firstName} ${formData.lastName}`}
+					onSuccess={handleFaceCaptureSuccess}
+					studentName={createdStudent.fullName}
+					studentId={createdStudent._id}
 				/>
 			</div>
 		);
 	}
 
+	if (step === "complete" && createdStudent) {
+		return (
+			<div className="flex flex-col items-center justify-center space-y-6">
+				<div className="text-center">
+					<h1 className="text-3xl font-bold">Registration Complete</h1>
+					<p className="text-muted-foreground mt-2">
+						Student {createdStudent.fullName} has been registered successfully.
+					</p>
+				</div>
+
+				<Button
+					onClick={handleComplete}
+					className="flex items-center gap-2 bg-green-600 hover:bg-green-700">
+					<Check className="h-4 w-4" />
+					Complete Registration
+				</Button>
+			</div>
+		);
+	}
+
+	if (step === "guardian") {
+		return (
+			<Card className="dark:bg-gray-800 bg-white shadow-md">
+				<CardHeader>
+					<CardTitle className="flex items-center gap-2">Guardian Information</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<form onSubmit={handleGuardianSubmit} className="space-y-6">
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<InputGroup
+								label="First Name *"
+								id="guardianFirstName"
+								value={guardianData.firstName}
+								onChange={(_, value) => handleGuardianChange("firstName", value)}
+							/>
+							<InputGroup
+								label="Last Name *"
+								id="guardianLastName"
+								value={guardianData.lastName}
+								onChange={(_, value) => handleGuardianChange("lastName", value)}
+							/>
+							<InputGroup
+								label="Middle Name"
+								id="guardianMiddleName"
+								value={guardianData.middleName}
+								onChange={(_, value) => handleGuardianChange("middleName", value)}
+							/>
+							<InputGroup
+								label="Email Address *"
+								id="guardianEmail"
+								value={guardianData.email}
+								onChange={(_, value) => handleGuardianChange("email", value)}
+							/>
+							<InputGroup
+								label="Phone Number"
+								id="guardianPhoneNumber"
+								value={guardianData.phoneNumber}
+								onChange={(_, value) => handleGuardianChange("phoneNumber", value)}
+							/>
+						</div>
+
+						<div className="flex justify-between space-x-3 pt-4 border-t">
+							<Button variant="outline" onClick={() => setStep("form")}>
+								<ArrowLeft className="h-4 w-4" /> Back to Student Info
+							</Button>
+							<Button type="submit" className="flex items-center gap-2">
+								<Camera className="h-4 w-4" />
+								Proceed to Face Capture
+							</Button>
+						</div>
+					</form>
+				</CardContent>
+			</Card>
+		);
+	}
+
 	return (
-		<div className="max-w-4xl mx-auto space-y-6 ">
+		<div className="max-w-4xl mx-auto space-y-6">
 			<div>
 				<h1 className="text-3xl font-bold">Register New Student</h1>
 				<p className="text-muted-foreground mt-2">
@@ -139,7 +240,6 @@ const StudentRegister = () => {
 								value={formData.studentId}
 								onChange={handleInputChange}
 							/>
-
 							<InputGroup
 								label="Section *"
 								id="section"
@@ -198,97 +298,15 @@ const StudentRegister = () => {
 								Clear Form
 							</Button>
 							<Button type="submit" className="flex items-center gap-2">
-								<Camera className="h-4 w-4" />
-								Proceed to Face Capture
+								<UserPlus className="h-4 w-4" />
+								Next: Guardian Info
 							</Button>
 						</div>
 					</form>
 				</CardContent>
 			</Card>
-
-			{formData.firstName && (
-				<Card className="mx-auto border-dashed border-2 border-blue-300 bg-blue-50 dark:bg-blue-900/10">
-					<CardContent className="p-4">
-						<h3 className="font-medium text-blue-900 mb-2">Student Preview</h3>
-						<div className="text-sm text-blue-700 space-y-1">
-							<p>
-								<strong>Name:</strong> {formData.firstName} {formData.middleName}{" "}
-								{formData.lastName}
-							</p>
-							<p>
-								<strong>ID:</strong> {formData.studentId}
-							</p>
-							<p>
-								<strong>Grade & Section:</strong> {formData.gradeLevel} -{" "}
-								{formData.section}
-							</p>
-							{formData.strand && (
-								<p>
-									<strong>Strand:</strong> {formData.strand}
-								</p>
-							)}
-						</div>
-					</CardContent>
-				</Card>
-			)}
 		</div>
 	);
 };
 
 export default StudentRegister;
-
-// Reusable input component
-const InputGroup = ({
-	label,
-	id,
-	value,
-	onChange,
-}: {
-	label: string;
-	id: string;
-	value: string;
-	onChange: (field: string, value: string) => void;
-}) => (
-	<div className="space-y-2">
-		<Label htmlFor={id}>{label}</Label>
-		<Input
-			id={id}
-			value={value}
-			onChange={(e) => onChange(id, e.target.value)}
-			placeholder={`Enter ${label.toLowerCase()}`}
-			required={label.includes("*")}
-		/>
-	</div>
-);
-
-const SelectGroup = ({
-	label,
-	id,
-	value,
-	options,
-	onChange,
-	disabled = false,
-}: {
-	label: string;
-	id: string;
-	value: string;
-	options: string[];
-	onChange: (field: string, value: string) => void;
-	disabled?: boolean;
-}) => (
-	<div className="space-y-2">
-		<Label htmlFor={id}>{label}</Label>
-		<Select value={value} onValueChange={(val) => onChange(id, val)} disabled={disabled}>
-			<SelectTrigger>
-				<SelectValue placeholder={`Select ${label.toLowerCase()}`} />
-			</SelectTrigger>
-			<SelectContent>
-				{options.map((option) => (
-					<SelectItem key={option} value={option}>
-						{option}
-					</SelectItem>
-				))}
-			</SelectContent>
-		</Select>
-	</div>
-);
