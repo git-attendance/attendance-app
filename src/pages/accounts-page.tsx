@@ -35,8 +35,8 @@ const AccountsPage = () => {
 	const [selectedRole, setSelectedRole] = useState<string>("all");
 	const [selectedStrand, setSelectedStrand] = useState<string>("all");
 
-	const getStrandColor = (strand: string) => {
-		switch (strand?.toLowerCase()) {
+	const getStrandColor = (strand: string | undefined) => {
+		switch ((strand ?? "").toLowerCase()) {
 			case "stem":
 				return "bg-blue-100 text-blue-800 border-blue-200";
 			case "humss":
@@ -92,7 +92,7 @@ const AccountsPage = () => {
 		<div className="space-y-6">
 			{/* Header */}
 			<div>
-				<h1 className="text-3xl font-bold text-gray-900">Accounts</h1>
+				<h1 className="text-3xl font-bold ">Accounts</h1>
 				<p className="text-gray-600 dark:text-gray-200 mt-2">
 					Manage all user accounts and students in the system
 				</p>
@@ -107,7 +107,7 @@ const AccountsPage = () => {
 								<p className="text-sm font-medium text-gray-600 dark:text-gray-200">
 									Total Accounts
 								</p>
-								<p className="text-2xl font-bold text-gray-900">{totalAccounts}</p>
+								<p className="text-2xl font-bold ">{totalAccounts}</p>
 							</div>
 							<div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10">
 								<Users className="h-6 w-6 text-blue-600" />
@@ -122,7 +122,7 @@ const AccountsPage = () => {
 								<p className="text-sm font-medium text-gray-600 dark:text-gray-200">
 									Admin Users
 								</p>
-								<p className="text-2xl font-bold text-gray-900">{adminCount}</p>
+								<p className="text-2xl font-bold ">{adminCount}</p>
 							</div>
 							<div className="p-3 rounded-lg bg-red-50 dark:bg-blue-900/10">
 								<Shield className="h-6 w-6 text-red-600" />
@@ -137,7 +137,7 @@ const AccountsPage = () => {
 								<p className="text-sm font-medium text-gray-600 dark:text-gray-200">
 									Teachers
 								</p>
-								<p className="text-2xl font-bold text-gray-900">{teacherCount}</p>
+								<p className="text-2xl font-bold ">{teacherCount}</p>
 							</div>
 							<div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10">
 								<CreditCard className="h-6 w-6 text-blue-600" />
@@ -152,7 +152,7 @@ const AccountsPage = () => {
 								<p className="text-sm font-medium text-gray-600 dark:text-gray-200">
 									Students
 								</p>
-								<p className="text-2xl font-bold text-gray-900">{totalStudents}</p>
+								<p className="text-2xl font-bold ">{totalStudents}</p>
 							</div>
 							<div className="p-3 rounded-lg bg-green-50 dark:bg-blue-900/10">
 								<GraduationCap className="h-6 w-6 text-green-600" />

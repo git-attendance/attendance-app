@@ -1,54 +1,40 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, RotateCcw, Check, X } from "lucide-react";
+import { Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { useAttendance } from "@/hooks/use-attendance";
+import { useStudent } from "@/hooks/use-student";
 
 interface FaceCaptureProps {
-	onCapture: (images: string[]) => void;
-	onComplete: () => void;
-	studentName?: string;
+	onSuccess: (enrolled: { id: string; name: string }) => void;
+	studentName: string;
+	studentId: string;
 }
 
-const REQUIRED_ANGLES = [
-	"Front Face",
-	"Left Profile",
-	"Right Profile",
-	"Slight Up Angle",
-	"Slight Down Angle",
-];
-
-const FaceCapture = ({ onCapture, onComplete, studentName }: FaceCaptureProps) => {
+const FaceCapture = ({ onSuccess, studentName, studentId }: FaceCaptureProps) => {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [isStreaming, setIsStreaming] = useState(false);
-	const [capturedImages, setCapturedImages] = useState<string[]>([]);
-	const [currentAngleIndex, setCurrentAngleIndex] = useState(0);
 	const [isCapturing, setIsCapturing] = useState(false);
+	const [hasCaptured, setHasCaptured] = useState(false);
+	const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+	const { enrollFace } = useAttendance();
+	const { uploadImage } = useStudent();
 
 	const startCamera = useCallback(async () => {
 		try {
 			const stream = await navigator.mediaDevices.getUserMedia({
-				video: {
-					width: 640,
-					height: 480,
-					facingMode: "user",
-				},
+				video: { width: 640, height: 480, facingMode: "user" },
 			});
-
 			if (videoRef.current) {
 				videoRef.current.srcObject = stream;
 				setIsStreaming(true);
 			}
 		} catch (error) {
-			console.error("Error accessing camera:", error);
-			toast.error(
-				<div>
-					<strong>Camera Error</strong>
-					<br />
-					<span>Unable to access camera. Please check permissions.</span>
-				</div>,
-			);
+			console.error("Camera access failed:", error);
+			toast.error("Unable to access camera. Please check permissions.");
 		}
 	}, []);
 
@@ -65,7 +51,6 @@ const FaceCapture = ({ onCapture, onComplete, studentName }: FaceCaptureProps) =
 		if (!videoRef.current || !canvasRef.current) return;
 
 		setIsCapturing(true);
-
 		setTimeout(() => {
 			const canvas = canvasRef.current!;
 			const video = videoRef.current!;
@@ -75,90 +60,78 @@ const FaceCapture = ({ onCapture, onComplete, studentName }: FaceCaptureProps) =
 			canvas.height = video.videoHeight;
 			ctx.drawImage(video, 0, 0);
 
-			const imageData = canvas.toDataURL("image/jpeg", 0.8);
-			const newImages = [...capturedImages, imageData];
-			setCapturedImages(newImages);
-
-			if (currentAngleIndex < REQUIRED_ANGLES.length - 1) {
-				setCurrentAngleIndex((prev) => prev + 1);
-				toast(
-					<>
-						<strong>Image Captured</strong>
-						<br />
-						{`${REQUIRED_ANGLES[currentAngleIndex]} captured. Please position for: ${REQUIRED_ANGLES[currentAngleIndex + 1]}`}
-					</>,
-				);
-			} else {
-				toast.success(
-					"All Images Captured. Face registration complete! You can now save the student.",
-				);
-				onCapture(newImages);
-				stopCamera();
-			}
+			const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+			setImagePreview(dataUrl);
+			setHasCaptured(true);
+			stopCamera();
 
 			setIsCapturing(false);
+			toast.success("Image captured. Ready to enroll.");
 		}, 100);
-	}, [capturedImages, currentAngleIndex, onCapture, stopCamera]);
+	}, [stopCamera]);
 
-	const resetCapture = () => {
-		setCapturedImages([]);
-		setCurrentAngleIndex(0);
-		if (!isStreaming) {
-			startCamera();
-		}
+	const reset = () => {
+		setHasCaptured(false);
+		setImagePreview(null);
+		startCamera();
+	};
+
+	const handleEnroll = async () => {
+		if (!canvasRef.current) return;
+
+		canvasRef.current.toBlob(
+			(blob) => {
+				if (!blob) {
+					toast.error("Failed to capture image blob");
+					return;
+				}
+
+				const file = new File([blob], "face.jpg", { type: "image/jpeg" });
+
+				// Upload to student's profile image
+				uploadImage.mutate(
+					{ studentId, file },
+					{
+						onSuccess: () => {
+							toast.success("Student image uploaded.");
+						},
+						onError: () => {
+							toast.error("Image upload failed.");
+						},
+					},
+				);
+
+				enrollFace.mutate(
+					{ photo: file, studentId },
+					{
+						onSuccess: (res) => {
+							onSuccess({ id: res.personId, name: studentName });
+						},
+						onError: (err: any) => {
+							toast.error(err?.error?.message || "Enrollment failed.");
+						},
+					},
+				);
+			},
+			"image/jpeg",
+			0.8,
+		);
 	};
 
 	useEffect(() => {
-		return () => {
-			stopCamera();
-		};
-	}, [stopCamera]);
-
-	const currentAngle = REQUIRED_ANGLES[currentAngleIndex];
-	const isComplete = capturedImages.length === REQUIRED_ANGLES.length;
+		startCamera();
+		return () => stopCamera();
+	}, [startCamera, stopCamera]);
 
 	return (
-		<Card className="w-full max-w-2xl mx-auto dark:bg-gray-800">
+		<Card className="w-full max-w-xl mx-auto">
 			<CardHeader>
 				<CardTitle className="flex items-center gap-2">
 					<Camera className="h-5 w-5" />
-					Face Registration - {studentName || "New Student"}
+					Face Enrollment - {studentName}
 				</CardTitle>
-				<p className="text-sm text-gray-600 dark:text-gray-400">
-					Capture {REQUIRED_ANGLES.length} different angles for accurate face recognition
-				</p>
 			</CardHeader>
 			<CardContent className="space-y-4">
-				{/* Progress Indicator */}
-				<div className="flex justify-center space-x-2 mb-4">
-					{REQUIRED_ANGLES.map((angle, index) => (
-						<div
-							key={angle}
-							className={`w-3 h-3 rounded-full transition-colors ${
-								index < capturedImages.length
-									? "bg-green-500"
-									: index === currentAngleIndex
-										? "bg-blue-500 dark:bg-blue-600"
-										: "bg-gray-300 dark:bg-gray-600"
-							}`}
-							title={angle}
-						/>
-					))}
-				</div>
-
-				{/* Current Instruction */}
-				{!isComplete && (
-					<div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200 dark:bg-blue-900 dark:border-blue-700">
-						<p className="font-medium text-blue-800 dark:text-blue-200">
-							Position #{currentAngleIndex + 1}: {currentAngle}
-						</p>
-						<p className="text-sm text-blue-600 mt-1 dark:text-blue-300">
-							Look directly at the camera and ensure good lighting
-						</p>
-					</div>
-				)}
-
-				{/* Video Feed */}
 				<div className="relative bg-gray-900 rounded-lg overflow-hidden">
 					<video
 						ref={videoRef}
@@ -168,84 +141,58 @@ const FaceCapture = ({ onCapture, onComplete, studentName }: FaceCaptureProps) =
 						className="w-full h-80 object-cover"
 					/>
 					<canvas ref={canvasRef} className="hidden" />
-
 					{isCapturing && (
-						<div className="absolute inset-0 bg-white bg-opacity-30 flex items-center justify-center dark:bg-gray-800 dark:bg-opacity-50">
-							<div className="bg-white rounded-full p-3">
-								<Camera className="h-8 w-8 text-blue-600" />
-							</div>
+						<div className="absolute inset-0 bg-white bg-opacity-30 flex items-center justify-center">
+							<Camera className="h-10 w-10 text-blue-600 animate-pulse" />
 						</div>
 					)}
-
-					{/* Overlay guides */}
-					<div className="absolute inset-0 pointer-events-none">
-						<div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-80 border-2 border-white border-dashed rounded-lg"></div>
-					</div>
 				</div>
 
-				{/* Preview of captured images */}
-				{capturedImages.length > 0 && (
-					<div className="grid grid-cols-5 gap-2">
-						{capturedImages.map((image, index) => (
-							<div key={index} className="relative">
-								<img
-									src={image}
-									alt={`Capture ${index + 1}`}
-									className="w-full h-16 object-cover rounded border"
-								/>
-								<div className="absolute -top-1 -right-1 bg-green-500 text-white rounded-full p-1">
-									<Check className="h-3 w-3" />
-								</div>
-							</div>
-						))}
+				{imagePreview && (
+					<div className="text-center">
+						<p className="text-sm mb-2">Captured Preview:</p>
+						<img
+							src={imagePreview}
+							alt="Preview"
+							className="w-40 h-40 object-cover mx-auto rounded border"
+						/>
 					</div>
 				)}
 
-				{/* Controls */}
 				<div className="flex justify-center space-x-3">
-					{!isStreaming && !isComplete && (
+					{!isStreaming && !hasCaptured && (
 						<Button onClick={startCamera} className="flex items-center gap-2">
 							<Camera className="h-4 w-4" />
 							Start Camera
 						</Button>
 					)}
 
-					{isStreaming && !isComplete && (
+					{isStreaming && !hasCaptured && (
 						<>
 							<Button
 								onClick={captureImage}
 								disabled={isCapturing}
 								className="flex items-center gap-2">
 								<Camera className="h-4 w-4" />
-								{isCapturing ? "Capturing..." : `Capture ${currentAngle}`}
+								{isCapturing ? "Capturing..." : "Capture Photo"}
 							</Button>
-							<Button
-								variant="outline"
-								onClick={stopCamera}
-								className="flex items-center gap-2">
+							<Button variant="outline" onClick={stopCamera}>
 								<X className="h-4 w-4" />
 								Stop
 							</Button>
 						</>
 					)}
 
-					{capturedImages.length > 0 && (
-						<Button
-							variant="outline"
-							onClick={resetCapture}
-							className="flex items-center gap-2">
-							<RotateCcw className="h-4 w-4" />
-							Reset
-						</Button>
-					)}
-
-					{isComplete && (
-						<Button
-							onClick={onComplete}
-							className="flex items-center gap-2 bg-green-600 hover:bg-green-700">
-							<Check className="h-4 w-4" />
-							Complete Registration
-						</Button>
+					{hasCaptured && (
+						<>
+							<Button onClick={handleEnroll} disabled={enrollFace.isPending}>
+								{enrollFace.isPending ? "Enrolling..." : "Enroll Face"}
+							</Button>
+							<Button variant="outline" onClick={reset}>
+								<X className="h-4 w-4" />
+								Retake
+							</Button>
+						</>
 					)}
 				</div>
 			</CardContent>

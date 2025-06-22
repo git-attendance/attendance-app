@@ -97,7 +97,7 @@ export const EditStudentModal = ({ open, onClose, student }: EditStudentModalPro
 							<SelectGroup
 								label="Strand (Grades 11–12)"
 								id="strand"
-								value={formData.strand}
+								value={formData.strand ?? ""}
 								options={["STEM", "HUMSS", "ABM", "GAS", "TVL"]}
 								onChange={handleChange}
 								disabled={

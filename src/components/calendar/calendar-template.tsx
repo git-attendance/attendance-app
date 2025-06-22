@@ -1,8 +1,4 @@
-import { eventTypes, sampleEvents } from "@/configs/test/sample-events";
-import type { CalendarEvent, CalendarView } from "@/models/calendar";
-import { eventStorageService } from "@/services/eventLocalService";
-import { getEventsForDate } from "@/utils/calendar-utils";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { CalendarHeader } from "./calendar-header";
 import { MonthView } from "./month-view";
@@ -20,49 +16,40 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "../ui/alert-dialog";
+import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent } from "@/hooks/use-event";
+import { eventTypes } from "@/configs/test/sample-events";
+import { getEventsForDate } from "@/utils/calendar-utils";
+import type { CalendarView, EventModel } from "@/models/event-model";
+import { useAuth } from "@/contexts/auth-context";
+import { eventTypeConfig, type EventTypeMeta } from "@/configs/event-types";
 
 export const CalendarTemplate = () => {
 	const [currentDate, setCurrentDate] = useState(new Date());
 	const [selectedDate, setSelectedDate] = useState(new Date());
 	const [view, setView] = useState<CalendarView>("month");
-	const [events, setEvents] = useState<CalendarEvent[]>([]);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-	const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
-	const [eventToDelete, setEventToDelete] = useState<CalendarEvent | null>(null);
+	const [editingEvent, setEditingEvent] = useState<EventModel | null>(null);
+	const [eventToDelete, setEventToDelete] = useState<EventModel | null>(null);
 
-	// Load events from localStorage on component mount
-	useEffect(() => {
-		const storedEvents = eventStorageService.getEvents();
-		if (storedEvents.length > 0) {
-			setEvents(storedEvents);
-		} else {
-			// If no stored events, use sample events and save them
-			setEvents(sampleEvents);
-			eventStorageService.saveEvents(sampleEvents);
-		}
-	}, []);
+	const { user } = useAuth();
+	const { data: events = [] } = useEvents("");
+	const createEventMutation = useCreateEvent();
+	const updateEventMutation = useUpdateEvent();
+	const deleteEventMutation = useDeleteEvent();
 
 	const handlePrevious = () => {
 		const newDate = new Date(currentDate);
-		if (view === "month") {
-			newDate.setMonth(newDate.getMonth() - 1);
-		} else if (view === "week") {
-			newDate.setDate(newDate.getDate() - 7);
-		} else {
-			newDate.setDate(newDate.getDate() - 1);
-		}
+		view === "month"
+			? newDate.setMonth(newDate.getMonth() - 1)
+			: newDate.setDate(newDate.getDate() - (view === "week" ? 7 : 1));
 		setCurrentDate(newDate);
 	};
 
 	const handleNext = () => {
 		const newDate = new Date(currentDate);
-		if (view === "month") {
-			newDate.setMonth(newDate.getMonth() + 1);
-		} else if (view === "week") {
-			newDate.setDate(newDate.getDate() + 7);
-		} else {
-			newDate.setDate(newDate.getDate() + 1);
-		}
+		view === "month"
+			? newDate.setMonth(newDate.getMonth() + 1)
+			: newDate.setDate(newDate.getDate() + (view === "week" ? 7 : 1));
 		setCurrentDate(newDate);
 	};
 
@@ -72,80 +59,77 @@ export const CalendarTemplate = () => {
 		setSelectedDate(today);
 	};
 
-	const handleDateSelect = (date: Date) => {
-		setSelectedDate(date);
+	const handleDateSelect = (date: Date) => setSelectedDate(date);
+
+	const handleEventClick = (event: EventModel) => {
+		toast.info(`${event.name}\n${event.description || ""}`);
 	};
 
-	const handleEventClick = (event: CalendarEvent) => {
-		toast.info(
-			`${event.title}
-			${event.description}` || `Event on ${event.startDate.toLocaleDateString()}`,
+	const handleCreateEvent = (
+		newEventData: Omit<EventModel, "_id" | "createdAt" | "updatedAt">,
+	) => {
+		if (!user) return;
+
+		const typeMetaEntry = Object.entries(eventTypeConfig).find(
+			([id]) => id === newEventData.type,
 		);
-	};
+		const typeMeta = typeMetaEntry ? typeMetaEntry[1] : undefined;
+		const color = typeMeta?.color || "#000";
+		const bgColor = typeMeta?.bgColor || "bg-gray-300";
 
-	const handleCreateEvent = (newEventData: Omit<CalendarEvent, "id">) => {
-		const newEvent: CalendarEvent = {
+		createEventMutation.mutate({
 			...newEventData,
-			id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-		};
-
-		// Add to localStorage
-		eventStorageService.addEvent(newEvent);
-
-		// Update local state
-		setEvents((prevEvents) => [...prevEvents, newEvent]);
-
-		toast.info(`"${newEvent.title}" has been added to your calendar.`);
+			organizerId: user._id,
+			color,
+			bgColor,
+		});
 	};
 
-	const handleUpdateEvent = (updatedEventData: Omit<CalendarEvent, "id">) => {
+	const handleUpdateEvent = (
+		updatedData: Omit<EventModel, "_id" | "createdAt" | "updatedAt">,
+	) => {
 		if (!editingEvent) return;
 
-		const updatedEvent: CalendarEvent = {
-			...updatedEventData,
-			id: editingEvent.id,
-		};
+		const typeMeta = eventTypes.find((t) => t.id === updatedData.type);
+		const color = typeMeta?.color || "#000";
+		const bgColor = typeMeta?.bgColor || "bg-gray-300";
 
-		// Update in localStorage
-		eventStorageService.updateEvent(updatedEvent);
-
-		// Update local state
-		setEvents((prevEvents) =>
-			prevEvents.map((event) => (event.id === editingEvent.id ? updatedEvent : event)),
-		);
-
-		toast.info(`"${updatedEvent.title}" has been updated in your calendar.`);
+		updateEventMutation.mutate({
+			id: editingEvent._id,
+			event: {
+				...updatedData,
+				organizerId: editingEvent.organizerId,
+				color,
+				bgColor,
+				_id: editingEvent._id,
+				createdAt: editingEvent.createdAt,
+				updatedAt: editingEvent.updatedAt,
+			},
+		});
 
 		setEditingEvent(null);
 	};
 
 	const handleDeleteEvent = (eventId: string) => {
-		const event = events.find((e) => e.id === eventId);
-		if (event) {
-			setEventToDelete(event);
-		}
+		const event = events.find((e) => e._id === eventId);
+		if (event) setEventToDelete(event);
 	};
 
 	const confirmDeleteEvent = () => {
 		if (!eventToDelete) return;
-
-		// Remove from localStorage
-		eventStorageService.removeEvent(eventToDelete.id);
-
-		// Update local state
-		setEvents((prevEvents) => prevEvents.filter((event) => event.id !== eventToDelete.id));
-
-		toast(`"${eventToDelete.title}" has been deleted from your calendar.`);
-
+		deleteEventMutation.mutate(eventToDelete._id);
 		setEventToDelete(null);
 	};
 
-	const handleEditEvent = (event: CalendarEvent) => {
+	const handleEditEvent = (event: EventModel) => {
 		setEditingEvent(event);
 		setIsCreateModalOpen(true);
 	};
 
-	const selectedDateEvents = getEventsForDate(selectedDate, events);
+	const selectedDateEvents = useMemo(
+		() => getEventsForDate(selectedDate, events),
+		[selectedDate, events],
+	);
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-blue-950 dark:via-gray-900 dark:to-gray-800 rounded-2xl">
@@ -197,14 +181,13 @@ export const CalendarTemplate = () => {
 				<EventsSidebar
 					selectedDate={selectedDate}
 					events={selectedDateEvents}
-					eventTypes={eventTypes}
+					eventTypes={eventTypes as EventTypeMeta[]}
 					onEventClick={handleEventClick}
 					onEditEvent={handleEditEvent}
 					onDeleteEvent={handleDeleteEvent}
 				/>
 			</div>
 
-			{/* Create/Edit Event Modal */}
 			<CreateEventModal
 				isOpen={isCreateModalOpen}
 				onClose={() => {
@@ -212,19 +195,16 @@ export const CalendarTemplate = () => {
 					setEditingEvent(null);
 				}}
 				onCreateEvent={editingEvent ? handleUpdateEvent : handleCreateEvent}
-				eventTypes={eventTypes}
 				initialDate={selectedDate}
 				editingEvent={editingEvent}
 			/>
 
-			{/* Delete Confirmation Modal */}
 			<AlertDialog open={!!eventToDelete} onOpenChange={() => setEventToDelete(null)}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>Delete Event</AlertDialogTitle>
 						<AlertDialogDescription>
-							Are you sure you want to delete "{eventToDelete?.title}"? This action
-							cannot be undone.
+							Are you sure you want to delete "{eventToDelete?.name}"?
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>

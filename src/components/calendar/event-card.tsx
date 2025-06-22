@@ -1,13 +1,13 @@
-import { type CalendarEvent } from "@/models/calendar";
 import { cn } from "@/lib/utils";
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
+import type { EventModel } from "@/models/event-model";
 
 interface EventCardProps {
-	event: CalendarEvent;
-	onClick?: (event: CalendarEvent) => void;
-	onEdit?: (event: CalendarEvent) => void;
+	event: EventModel;
+	onClick?: (event: EventModel) => void;
+	onEdit?: (event: EventModel) => void;
 	onDelete?: (eventId: string) => void;
 	className?: string;
 	isCompact?: boolean;
@@ -39,7 +39,7 @@ export const EventCard = ({
 	const handleDelete = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		if (onDelete) {
-			onDelete(event.id);
+			onDelete(event._id);
 		}
 	};
 
@@ -49,21 +49,23 @@ export const EventCard = ({
 		<div
 			className={cn(
 				"rounded-md px-2 py-1 text-xs font-medium transition-all duration-200 hover:shadow-sm relative group",
-				event.type.bgColor,
-				event.type.color,
+				event.bgColor,
+				event.color,
 				isCompact ? "truncate" : "mb-1",
 				onClick && "cursor-pointer hover:scale-105",
 				className,
 			)}
 			onClick={onClick ? handleClick : undefined}
-			title={event.title}>
+			title={event.name}>
 			{isCompact ? (
-				<div className="truncate">{event.title} damn</div>
+				<div className="truncate dark:text-black">{event.name}</div>
 			) : (
 				<div>
-					<div className="font-semibold pr-12">{event.title}</div>
+					<div className="font-semibold pr-12 dark:text-black">{event.name}</div>
 					{event.description && (
-						<div className="text-xs opacity-80 mt-1">{event.description}</div>
+						<div className="text-xs opacity-80 mt-1 dark:text-gray-800">
+							{event.description}
+						</div>
 					)}
 				</div>
 			)}
@@ -77,7 +79,7 @@ export const EventCard = ({
 							className="h-6 w-6 p-0 hover:bg-white/20"
 							onClick={handleEdit}
 							title="Edit event">
-							<Edit className="h-3 w-3" />
+							<Edit className="h-3 w-3 dark:text-black" />
 						</Button>
 					)}
 					{onDelete && (
@@ -87,7 +89,7 @@ export const EventCard = ({
 							className="h-6 w-6 p-0 hover:bg-red-500/20"
 							onClick={handleDelete}
 							title="Delete event">
-							<Trash2 className="h-3 w-3" />
+							<Trash2 className="h-3 w-3 dark:text-black" />
 						</Button>
 					)}
 				</div>

@@ -57,4 +57,26 @@ export class StudentService extends APIService {
 			},
 		});
 	}
+
+	async uploadImage(studentId: string, file: File) {
+		const url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.STUDENTS.UPLOAD_IMAGE.replace(":id", studentId)}`;
+		const formData = new FormData();
+		formData.append("image", file);
+
+		return this.asyncFetch.post(url, {
+			body: formData,
+		});
+	}
+
+	async exportCSV(): Promise<{ blob: Blob; filename: string }> {
+		const url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.STUDENTS.EXPORT_CSV}`;
+		const response = await this.asyncFetch.get(url);
+
+		const contentDisposition = response.headers.get("Content-Disposition");
+		const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+		const filename = filenameMatch?.[1] ?? "students.csv";
+
+		const blob = await response.blob();
+		return { blob, filename };
+	}
 }

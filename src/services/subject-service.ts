@@ -30,7 +30,7 @@ export class SubjectService extends APIService {
 
 	async getByInstructor(instructorId: string) {
 		this.resetQuery();
-		const url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.SUBJECTS.BY_INSTRUCTOR.replace(":id", instructorId)}${this.query}`;
+		const url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.SUBJECTS.BY_USER.replace(":id", instructorId)}${this.query}`;
 		return this.asyncFetch.get(url);
 	}
 

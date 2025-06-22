@@ -1,4 +1,4 @@
-import { type CalendarEvent } from "@/models/calendar";
+import type { EventModel } from "@/models/event-model";
 
 export const getDaysInMonth = (date: Date): Date[] => {
 	const year = date.getFullYear();
@@ -29,12 +29,13 @@ export const getDaysInMonth = (date: Date): Date[] => {
 	return days;
 };
 
-export const getEventsForDate = (date: Date, events: CalendarEvent[]): CalendarEvent[] => {
-	return events.filter((event) => {
-		const eventStart = new Date(event.startDate);
-		const eventEnd = new Date(event.endDate);
+export const getEventsForDate = (date: Date, events: EventModel[] = []): EventModel[] => {
+	if (!Array.isArray(events)) return [];
 
-		// Reset time to compare dates only
+	return events.filter((event) => {
+		const eventStart = new Date(event.startDate ?? "");
+		const eventEnd = new Date(event.endDate ?? "");
+
 		const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 		const startDate = new Date(
 			eventStart.getFullYear(),

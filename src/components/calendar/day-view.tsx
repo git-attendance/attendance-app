@@ -1,12 +1,12 @@
-import type { CalendarEvent } from "@/models/calendar";
 import { formatDate, getEventsForDate } from "@/utils/calendar-utils";
 import { EventCard } from "./event-card";
+import type { EventModel } from "@/models/event-model";
 
 interface DayViewProps {
 	currentDate: Date;
-	events: CalendarEvent[];
-	onEventClick: (event: CalendarEvent) => void;
-	onEditEvent?: (event: CalendarEvent) => void;
+	events: EventModel[];
+	onEventClick: (event: EventModel) => void;
+	onEditEvent?: (event: EventModel) => void;
 	onDeleteEvent?: (eventId: string) => void;
 }
 
@@ -69,7 +69,7 @@ export const DayView = ({
 										.slice(hourIndex * 2, (hourIndex + 1) * 2)
 										.map((event) => (
 											<EventCard
-												key={event.id}
+												key={event._id}
 												event={event}
 												onClick={onEventClick}
 												className="shadow-sm"
@@ -91,7 +91,7 @@ export const DayView = ({
 					<div className="grid gap-3">
 						{dayEvents.map((event) => (
 							<EventCard
-								key={event.id}
+								key={event._id}
 								event={event}
 								onClick={onEventClick}
 								onEdit={onEditEvent}

@@ -1,60 +1,115 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { AttendanceService } from "@/services/attendance-service";
+import { toast } from "sonner";
+import type { AttendanceSummaryResponse } from "@/models/attendance-model";
 
 const attendanceService = new AttendanceService();
 
-export const attendanceKeys = {
-	today: ["attendance", "today"],
-	student: (id: string) => ["attendance", "student", id],
-	statusByStudentSubject: (studentId: string, subjectId: string) => [
-		"attendance",
-		"student",
-		studentId,
-		"subject",
-		subjectId,
-	],
-	bySubject: (subjectId: string) => ["attendance", "subject", subjectId],
-	stats: (subjectId: string) => ["attendance", "subject", subjectId, "stats"],
-	studentsStatus: (subjectId: string) => ["attendance", "subject", subjectId, "students"],
-};
-
-export const useTodayAttendance = () =>
-	useQuery({
-		queryKey: attendanceKeys.today,
+export function useAttendance() {
+	const getToday = useQuery<AttendanceSummaryResponse>({
+		queryKey: ["attendance", "today"],
 		queryFn: () => attendanceService.getTodayRecords(),
 	});
 
-export const useStudentAttendanceHistory = (studentId: string) =>
-	useQuery({
-		queryKey: attendanceKeys.student(studentId),
-		queryFn: () => attendanceService.getStudentHistory(studentId),
-		enabled: !!studentId,
+	// Enroll student face
+	const enrollFace = useMutation({
+		mutationFn: (payload: { photo: File; studentId: string }) =>
+			attendanceService.enrollFace(payload.photo, payload.studentId),
+		onSuccess: (res) => {
+			toast.success(res.message || "Face enrolled successfully");
+		},
+		onError: (err: any) => {
+			toast.error(err?.error?.message || "Failed to enroll face");
+		},
 	});
 
-export const useStudentAttendanceStatus = (studentId: string, subjectId: string) =>
-	useQuery({
-		queryKey: attendanceKeys.statusByStudentSubject(studentId, subjectId),
-		queryFn: () => attendanceService.getStudentStatus(studentId, subjectId),
-		enabled: !!studentId && !!subjectId,
+	// Process attendance (check-in/check-out)
+	const process = useMutation({
+		mutationFn: (payload: { photo: File; subjectId: string }) =>
+			attendanceService.processAttendance(payload.photo, payload.subjectId),
+		onSuccess: (res) => {
+			toast.success(res.message || "Attendance recorded");
+		},
+		onError: (err: any) => {
+			toast.error(err?.error?.message || "Failed to process attendance");
+		},
 	});
 
-export const useSubjectAttendanceRecords = (subjectId: string) =>
-	useQuery({
-		queryKey: attendanceKeys.bySubject(subjectId),
-		queryFn: () => attendanceService.getSubjectRecords(subjectId),
-		enabled: !!subjectId,
+	// Get attendance history
+	const getHistory = (studentId: string, subjectId?: string, startDate?: Date, endDate?: Date) =>
+		useQuery({
+			queryKey: ["attendance", "history", studentId, subjectId, startDate, endDate],
+			queryFn: () =>
+				attendanceService.getAttendanceHistory(studentId, subjectId, startDate, endDate),
+			enabled: !!studentId,
+		});
+
+	// Get student subject status
+	const getStudentStatus = (
+		studentId: string,
+		subjectId: string,
+		startDate?: Date,
+		endDate?: Date,
+	) =>
+		useQuery({
+			queryKey: ["attendance", "student-status", studentId, subjectId, startDate, endDate],
+			queryFn: () =>
+				attendanceService.getStudentStatus(studentId, subjectId, startDate, endDate),
+			enabled: !!studentId && !!subjectId,
+		});
+
+	// Get subject stats
+	const getSubjectStats = (subjectId: string, startDate?: Date, endDate?: Date) =>
+		useQuery({
+			queryKey: ["attendance", "subject-stats", subjectId, startDate, endDate],
+			queryFn: () => attendanceService.getSubjectStats(subjectId, startDate, endDate),
+			enabled: !!subjectId,
+		});
+
+	// Get all student statuses in subject
+	const getSubjectStudentsStatus = (subjectId: string, startDate?: Date, endDate?: Date) =>
+		useQuery({
+			queryKey: ["attendance", "students-status", subjectId, startDate, endDate],
+			queryFn: () =>
+				attendanceService.getSubjectStudentsStatus(subjectId, startDate, endDate),
+			enabled: !!subjectId,
+		});
+
+	// Test SMS
+	const testSMS = useMutation({
+		mutationFn: (phoneNumber: string) => attendanceService.testSMS(phoneNumber),
+		onSuccess: (res) => {
+			toast.success(res.message || "Test SMS sent successfully");
+		},
+		onError: (err: any) => {
+			toast.error(err?.error?.message || "Failed to send test SMS");
+		},
 	});
 
-export const useSubjectAttendanceStats = (subjectId: string) =>
-	useQuery({
-		queryKey: attendanceKeys.stats(subjectId),
-		queryFn: () => attendanceService.getSubjectStats(subjectId),
-		enabled: !!subjectId,
-	});
+	// Get overall stats
+	const getOverallStats = (filters?: {
+		studentId?: string;
+		subjectId?: string;
+		startDate?: Date;
+		endDate?: Date;
+	}) =>
+		useQuery({
+			queryKey: ["attendance", "overall-stats", filters],
+			queryFn: () => attendanceService.getOverallStats(filters),
+		});
 
-export const useSubjectStudentsAttendanceStatus = (subjectId: string) =>
-	useQuery({
-		queryKey: attendanceKeys.studentsStatus(subjectId),
-		queryFn: () => attendanceService.getSubjectStudentsStatus(subjectId),
-		enabled: !!subjectId,
-	});
+	return {
+		// Queries
+		getToday,
+		getHistory,
+		getStudentStatus,
+		getSubjectStats,
+		getSubjectStudentsStatus,
+		getOverallStats,
+
+		// Mutations
+		enrollFace,
+		process,
+		testSMS,
+	};
+}

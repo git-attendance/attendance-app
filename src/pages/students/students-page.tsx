@@ -1,3 +1,13 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { Users, Plus, UserCheck, UserX, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+import { useStudent } from "@/hooks/use-student";
+import { useAttendance } from "@/hooks/use-attendance";
+import { useAuth } from "@/contexts/auth-context";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,27 +19,23 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-
-import { Users, Plus, UserCheck, UserX, MoreVertical, Eye, Edit, Trash2 } from "lucide-react";
-import { format } from "date-fns";
-import { useStudent } from "@/hooks/use-student";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth-context";
 import { EditStudentModal } from "@/components/modals/edit-student";
-import type { StudentModel } from "@/models/student-model";
-import { useState } from "react";
 import { DeleteDialog } from "@/components/dialogs/delete-dialog";
+import type { StudentModel } from "@/models/student-model";
 
 const StudentsPage = () => {
 	const { getAll, remove } = useStudent();
 	const { data: students } = getAll();
+
+	const { getOverallStats } = useAttendance();
+	const { data: stats, isLoading: statsLoading } = getOverallStats();
+
 	const navigate = useNavigate();
 	const { user } = useAuth();
 	const role = user?.role;
@@ -38,7 +44,6 @@ const StudentsPage = () => {
 	const [isEditOpen, setEditOpen] = useState(false);
 	const [isDeleteOpen, setDeleteOpen] = useState(false);
 
-	// When edit button is clicked:
 	const handleEdit = (student: StudentModel) => {
 		setSelectedStudent(student);
 		setEditOpen(true);
@@ -115,7 +120,7 @@ const StudentsPage = () => {
 									Total Students
 								</p>
 								<p className="text-2xl font-bold text-gray-900 dark:text-white">
-									{students?.length}
+									{students?.length ?? 0}
 								</p>
 							</div>
 						</div>
@@ -131,7 +136,7 @@ const StudentsPage = () => {
 									Present Today
 								</p>
 								<p className="text-2xl font-bold text-gray-900 dark:text-white">
-									12
+									{statsLoading ? "..." : (stats?.totalPresent ?? 0)}
 								</p>
 							</div>
 						</div>
@@ -147,7 +152,7 @@ const StudentsPage = () => {
 									Absent Today
 								</p>
 								<p className="text-2xl font-bold text-gray-900 dark:text-white">
-									3
+									{statsLoading ? "..." : (stats?.totalAbsent ?? 0)}
 								</p>
 							</div>
 						</div>
@@ -163,7 +168,11 @@ const StudentsPage = () => {
 									Attendance Rate
 								</p>
 								<p className="text-2xl font-bold text-gray-900 dark:text-white">
-									80%
+									{statsLoading
+										? "..."
+										: stats?.attendancePercentage
+											? `${stats.attendancePercentage}%`
+											: "0%"}
 								</p>
 							</div>
 						</div>
@@ -181,16 +190,12 @@ const StudentsPage = () => {
 						<div className="text-center py-12">
 							<Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
 							<h3 className="text-lg font-medium text-gray-900 mb-2">
-								{students?.length === 0 ? "No Students Yet" : "No Students Found"}
+								No Students Yet
 							</h3>
 							<p className="text-gray-600 mb-4">
-								{students?.length === 0
-									? "Add your first student to get started with attendance tracking"
-									: "Try adjusting your search criteria"}
+								Add your first student to get started with attendance tracking
 							</p>
-							{students?.length === 0 && (
-								<Button onClick={handleAddStudent}>Add Your First Student</Button>
-							)}
+							<Button onClick={handleAddStudent}>Add Your First Student</Button>
 						</div>
 					) : (
 						<div className="overflow-x-auto">
@@ -207,7 +212,7 @@ const StudentsPage = () => {
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{students?.map((student) => {
+									{(students ?? []).map((student) => {
 										const fullName = `${student.firstName} ${student.lastName}`;
 										return (
 											<TableRow key={student._id}>
@@ -249,21 +254,7 @@ const StudentsPage = () => {
 													</Badge>
 												</TableCell>
 												<TableCell>
-													{/* <Badge
-														variant={
-															getAttendanceStatus(student._id) ===
-															"Present"
-																? "default"
-																: "secondary"
-														}
-														className={
-															getAttendanceStatus(student._id) ===
-															"Present"
-																? "bg-green-100 text-green-800"
-																: "bg-red-100 text-red-800"
-														}>
-														{getAttendanceStatus(student._id)}
-													</Badge> */}
+													{/* Placeholder - Replace with real-time status if needed */}
 													No status yet
 												</TableCell>
 												<TableCell className="text-sm text-gray-500">
@@ -280,14 +271,6 @@ const StudentsPage = () => {
 															</Button>
 														</DropdownMenuTrigger>
 														<DropdownMenuContent align="end">
-															<DropdownMenuItem>
-																<UserCheck className="h-4 w-4 mr-2" />
-																Mark Present
-															</DropdownMenuItem>
-															<DropdownMenuItem>
-																<Eye className="h-4 w-4 mr-2" />
-																View Details
-															</DropdownMenuItem>
 															<DropdownMenuItem
 																onClick={() => handleEdit(student)}>
 																<Edit className="h-4 w-4 mr-2" />
@@ -311,11 +294,13 @@ const StudentsPage = () => {
 							</Table>
 						</div>
 					)}
+
 					<EditStudentModal
 						open={isEditOpen}
 						onClose={() => setEditOpen(false)}
 						student={selectedStudent}
 					/>
+
 					<DeleteDialog
 						isOpen={isDeleteOpen}
 						onClose={() => {

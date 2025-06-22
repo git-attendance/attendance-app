@@ -2,6 +2,7 @@ import { useAsyncFetch } from "@/hooks/use-async-fetch";
 import { APIService } from "./api-service";
 import { API_ENDPOINTS } from "@/configs/endpoints";
 import type { EventModel } from "@/models/event-model";
+import type { CreateEventInput } from "@/configs/event-types";
 
 export class EventService extends APIService {
 	asyncFetch = useAsyncFetch();
@@ -21,8 +22,17 @@ export class EventService extends APIService {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 
-			const data: EventModel[] = await response.json();
-			return data;
+			const raw = await response.json();
+			const data: EventModel[] = raw.data; // <-- the actual array
+
+			return data.map((event) => ({
+				...event,
+				startDate: event.startDate ? new Date(event.startDate) : undefined,
+				endDate: event.endDate ? new Date(event.endDate) : undefined,
+				date: event.date ? new Date(event.date) : undefined,
+				createdAt: new Date(event.createdAt),
+				updatedAt: new Date(event.updatedAt),
+			}));
 		} catch (error) {
 			console.error("Error getting all Events:", error);
 			throw error;
@@ -55,7 +65,7 @@ export class EventService extends APIService {
 		}
 	};
 
-	createEvent = async (event: EventModel): Promise<EventModel> => {
+	createEvent = async (event: CreateEventInput): Promise<EventModel> => {
 		try {
 			const response = await this.asyncFetch.post(
 				`${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.EVENTS.CREATE}`,

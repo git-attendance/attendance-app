@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { EventService } from "@/services/event-service";
 import type { EventModel } from "@/models/event-model";
 import { toast } from "sonner";
+import type { CreateEventInput } from "@/configs/event-types";
 
 const eventService = new EventService();
 
@@ -27,7 +28,7 @@ export const useCreateEvent = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (event: EventModel) => eventService.createEvent(event),
+		mutationFn: (event: CreateEventInput) => eventService.createEvent(event),
 		onSuccess: () => {
 			toast.success("Event created successfully");
 			queryClient.invalidateQueries({ queryKey: eventKeys.all });
