@@ -4,7 +4,6 @@ import { School, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { APP_CONSTANTS } from "@/configs/app-constants";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
 import { toast } from "sonner";
 import InputWithToggle from "@/components/ui/input-toggle";
@@ -141,13 +140,13 @@ const Login = () => {
 							</label> */}
 						</div>
 
-						<div className="text-sm">
+						{/* <div className="text-sm">
 							<Link
 								to="/forgot-password"
 								className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
 								Forgot your password?
 							</Link>
-						</div>
+						</div> */}
 					</div>
 
 					<div>
@@ -159,14 +158,14 @@ const Login = () => {
 					</div>
 				</form>
 
-				<div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+				{/* <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
 					Don't have an account?{" "}
 					<Link
 						to="/register"
 						className="text-blue-600 hover:text-blue-500 dark:text-blue-400">
 						Sign up
 					</Link>
-				</div>
+				</div> */}
 				{/* <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
 					Demo Credentials:
 					<br />
