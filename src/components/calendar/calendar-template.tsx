@@ -22,6 +22,7 @@ import { getEventsForDate } from "@/utils/calendar-utils";
 import type { CalendarView, EventModel } from "@/models/event-model";
 import { useAuth } from "@/contexts/auth-context";
 import { eventTypeConfig, type EventTypeMeta } from "@/configs/event-types";
+import { YearView } from "./year-view";
 
 export const CalendarTemplate = () => {
 	const [currentDate, setCurrentDate] = useState(new Date());
@@ -145,6 +146,17 @@ export const CalendarTemplate = () => {
 
 			<div className="flex">
 				<div className="flex-1 p-6">
+					{view === "year" && (
+						<YearView
+							currentDate={currentDate}
+							events={events}
+							selectedDate={selectedDate}
+							onDateSelect={handleDateSelect}
+							onEventClick={handleEventClick}
+							onEditEvent={handleEditEvent}
+							onDeleteEvent={handleDeleteEvent}
+						/>
+					)}
 					{view === "month" && (
 						<MonthView
 							currentDate={currentDate}

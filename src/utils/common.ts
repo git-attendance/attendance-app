@@ -247,3 +247,13 @@ export const formatTime = (time: string): string => {
 
 	return `${formattedHours}:${formattedMinutes} ${suffix}`;
 };
+
+export const formatTimeFromDate = (date: Date): string => {
+	const hours = date.getHours();
+	const minutes = date.getMinutes();
+	const formattedHours = hours % 12 || 12; // Convert 0-23 to 1-12
+	const formattedMinutes = minutes.toString().padStart(2, "0");
+	const suffix = hours >= 12 ? "PM" : "AM";
+
+	return `${formattedHours}:${formattedMinutes} ${suffix}`;
+};

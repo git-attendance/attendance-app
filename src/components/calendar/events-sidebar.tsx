@@ -25,7 +25,7 @@ export const EventsSidebar = ({
 		<div className="w-80 bg-white border-l border-gray-200 p-6 dark:bg-gray-900 dark:border-gray-800">
 			<div className="mb-6">
 				<h2 className="text-lg font-semibold text-gray-900 mb-2 dark:text-gray-100">
-					Events
+					Events Today
 				</h2>
 				<p className="text-sm text-gray-600 dark:text-gray-400">
 					{formatDate(selectedDate)}
@@ -47,7 +47,7 @@ export const EventsSidebar = ({
 				</div>
 			) : (
 				<div className="text-center py-8 text-gray-500 dark:text-gray-400">
-					<div className="text-sm">No events scheduled</div>
+					<div className="text-sm">No events scheduled today</div>
 				</div>
 			)}
 
