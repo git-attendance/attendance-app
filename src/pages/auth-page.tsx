@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { APP_CONSTANTS } from "@/configs/app-constants";
 import Login from "@/components/features/auth/login";
 import SplashScreen from "@/layouts/splash-screen";
-import RegistrationForm from "@/components/features/auth/registration-form";
 import { useAuth } from "@/contexts/auth-context";
 
 const AuthPage = () => {
@@ -64,7 +63,7 @@ const AuthPage = () => {
 					</>
 				) : (
 					<>
-						<RegistrationForm />
+						{/* <RegistrationForm /> */}
 						<section className="w-[70%] h-full hidden md:block">
 							<div
 								className="absolute inset-0 bg-gray-200 animate-pulse"
