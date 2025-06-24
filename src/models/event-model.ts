@@ -14,7 +14,7 @@ export interface EventModel {
 	updatedAt: Date;
 }
 
-export type CalendarView = "month" | "week" | "day";
+export type CalendarView = "month" | "week" | "day" | "year";
 
 export interface CalendarViewProps {
 	currentDate: Date;
