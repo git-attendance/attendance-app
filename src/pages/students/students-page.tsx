@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Users, Plus, UserCheck, UserX, MoreVertical, Edit, Trash2 } from "lucide-react";
@@ -28,6 +28,7 @@ import {
 import { EditStudentModal } from "@/components/modals/edit-student";
 import { DeleteDialog } from "@/components/dialogs/delete-dialog";
 import type { StudentModel } from "@/models/student-model";
+import Avatar from "@/components/ui/avatar";
 
 const StudentsPage = () => {
 	const { getAll, remove } = useStudent();
@@ -94,6 +95,63 @@ const StudentsPage = () => {
 		}
 	};
 
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 10;
+
+	const paginatedStudents = (students ?? []).slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage,
+	);
+
+	const totalPages = Math.ceil((students?.length ?? 0) / itemsPerPage);
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [students]);
+
+	const PaginationControls = () => {
+		if (totalPages <= 1) return null;
+
+		return (
+			<div className="flex justify-end items-center gap-2 mt-4">
+				<Button
+					variant="outline"
+					size="sm"
+					disabled={currentPage === 1}
+					onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}>
+					Previous
+				</Button>
+				<span className="text-sm">
+					Page {currentPage} of {totalPages}
+				</span>
+				<Button
+					variant="outline"
+					size="sm"
+					disabled={currentPage === totalPages}
+					onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}>
+					Next
+				</Button>
+			</div>
+		);
+	};
+
+	// const handleExport = async () => {
+	// 	try {
+	// 		const { blob, filename } = await exportCSV.mutateAsync();
+	// 		const url = window.URL.createObjectURL(blob);
+	// 		const link = document.createElement("a");
+	// 		link.href = url;
+	// 		link.setAttribute("download", filename || "students.csv");
+	// 		document.body.appendChild(link);
+	// 		link.click();
+	// 		link.remove();
+	// 		toast.success("Student data exported.");
+	// 	} catch (error) {
+	// 		console.error(error);
+	// 		toast.error("Failed to export student data.");
+	// 	}
+	// };
+
 	return (
 		<div className="space-y-6">
 			<div className="flex justify-between items-start">
@@ -103,10 +161,15 @@ const StudentsPage = () => {
 						Manage student records and view attendance history
 					</p>
 				</div>
-				<Button onClick={handleAddStudent} className="flex items-center gap-2">
-					<Plus className="h-4 w-4" />
-					Add Student
-				</Button>
+				<div className="flex items-center gap-2">
+					{/* <Button onClick={handleExport} variant="outline">
+						Export CSV
+					</Button> */}
+					<Button onClick={handleAddStudent} className="flex items-center gap-2">
+						<Plus className="h-4 w-4" />
+						Add Student
+					</Button>
+				</div>
 			</div>
 
 			{/* Stats Cards */}
@@ -183,10 +246,10 @@ const StudentsPage = () => {
 			{/* Students Table */}
 			<Card className="dark:bg-gray-800 dark:text-white">
 				<CardHeader>
-					<CardTitle>Student Directory ({students?.length})</CardTitle>
+					<CardTitle>Student Directory ({paginatedStudents?.length})</CardTitle>
 				</CardHeader>
 				<CardContent>
-					{students?.length === 0 ? (
+					{paginatedStudents?.length === 0 ? (
 						<div className="text-center py-12">
 							<Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
 							<h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -212,18 +275,18 @@ const StudentsPage = () => {
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{(students ?? []).map((student) => {
+									{(paginatedStudents ?? []).map((student) => {
 										const fullName = `${student.firstName} ${student.lastName}`;
 										return (
 											<TableRow key={student._id}>
 												<TableCell>
 													<div className="flex items-center space-x-3">
-														<div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
-															<span className="text-blue-600 font-semibold text-sm">
-																{student.firstName[0]}
-																{student.lastName[0]}
-															</span>
-														</div>
+														<Avatar
+															src={student.image}
+															alt={`${student.firstName} ${student.lastName}`}
+															size="small"
+														/>
+
 														<div>
 															<p className="font-medium text-gray-900 dark:text-white">
 																{fullName}
@@ -292,6 +355,7 @@ const StudentsPage = () => {
 									})}
 								</TableBody>
 							</Table>
+							<PaginationControls />
 						</div>
 					)}
 

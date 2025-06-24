@@ -12,6 +12,7 @@ interface CalendarHeaderProps {
 	onViewChange: (view: CalendarView) => void;
 	onToday: () => void;
 	onCreateEventClick: () => void;
+	extendedSlot?: React.ReactNode;
 }
 
 export const CalendarHeader = ({
@@ -22,6 +23,7 @@ export const CalendarHeader = ({
 	onViewChange,
 	onToday,
 	onCreateEventClick,
+	extendedSlot,
 }: CalendarHeaderProps) => {
 	const viewButtons: { label: string; value: CalendarView }[] = [
 		{ label: "Day", value: "day" },
@@ -48,6 +50,7 @@ export const CalendarHeader = ({
 					<Plus className="w-4 h-4 ml-2" />
 				</Button>
 				{/* )} */}
+				{extendedSlot}
 			</div>
 
 			<div className="flex items-center space-x-4">

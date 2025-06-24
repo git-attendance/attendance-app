@@ -18,17 +18,31 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Users, CreditCard, Shield, GraduationCap } from "lucide-react";
+import { Users, CreditCard, Shield, GraduationCap, MoreVertical, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
-import { useUsers } from "@/hooks/use-user";
+import { useDeleteUser, useUsers } from "@/hooks/use-user";
 import { useStudent } from "@/hooks/use-student";
 import type { UserModel } from "@/models/user-model";
 import type { StudentModel } from "@/models/student-model";
+import { AddTeacherModal } from "@/components/modals/add-teacher";
+import { toast } from "sonner";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { DeleteDialog } from "@/components/dialogs/delete-dialog";
+import { EditUserModal } from "@/components/modals/edit-teacher";
 
 const AccountsPage = () => {
 	const { data: users = [] } = useUsers();
 	const { getAll: getAllStudents } = useStudent();
 	const students = getAllStudents().data ?? [];
+	const [selectedUser, setSelectedUser] = useState<UserModel | null>(null);
+	const [isEditUserOpen, setEditUserOpen] = useState(false);
+	const [isDeleteUserOpen, setDeleteUserOpen] = useState(false);
 
 	const [userSearch, setUserSearch] = useState("");
 	const [studentSearch, setStudentSearch] = useState("");
@@ -88,14 +102,90 @@ const AccountsPage = () => {
 	const adminCount = users.filter((u: UserModel) => u.role === "admin").length;
 	const teacherCount = users.filter((u: UserModel) => u.role === "teacher").length;
 
+	const [userPage, setUserPage] = useState(1);
+	const [studentPage, setStudentPage] = useState(1);
+	const itemsPerPage = 10;
+
+	const handleEditUser = (user: UserModel) => {
+		setSelectedUser(user);
+		setEditUserOpen(true);
+	};
+
+	const handleDeleteUserClick = (user: UserModel) => {
+		setSelectedUser(user);
+		setDeleteUserOpen(true);
+	};
+
+	const { mutateAsync: deleteUser } = useDeleteUser();
+
+	const handleConfirmDeleteUser = async () => {
+		if (!selectedUser) return;
+		try {
+			await deleteUser(selectedUser._id);
+			toast.success("User deleted successfully.");
+		} catch {
+			toast.error("Failed to delete user.");
+		} finally {
+			setDeleteUserOpen(false);
+			setSelectedUser(null);
+		}
+	};
+
+	const paginatedUsers = filteredUsers.slice(
+		(userPage - 1) * itemsPerPage,
+		userPage * itemsPerPage,
+	);
+
+	const paginatedStudents = filteredStudents.slice(
+		(studentPage - 1) * itemsPerPage,
+		studentPage * itemsPerPage,
+	);
+
+	const PaginationControls = ({
+		currentPage,
+		totalItems,
+		onPageChange,
+	}: {
+		currentPage: number;
+		totalItems: number;
+		onPageChange: (page: number) => void;
+	}) => {
+		const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+		if (totalPages <= 1) return null;
+
+		return (
+			<div className="flex justify-end items-center gap-2 mt-4">
+				<button
+					disabled={currentPage === 1}
+					onClick={() => onPageChange(currentPage - 1)}
+					className="text-sm px-2 py-1 border rounded disabled:opacity-50">
+					Previous
+				</button>
+				<span className="text-sm">
+					Page {currentPage} of {totalPages}
+				</span>
+				<button
+					disabled={currentPage === totalPages}
+					onClick={() => onPageChange(currentPage + 1)}
+					className="text-sm px-2 py-1 border rounded disabled:opacity-50">
+					Next
+				</button>
+			</div>
+		);
+	};
+
 	return (
 		<div className="space-y-6">
 			{/* Header */}
-			<div>
-				<h1 className="text-3xl font-bold ">Accounts</h1>
-				<p className="text-gray-600 dark:text-gray-200 mt-2">
-					Manage all user accounts and students in the system
-				</p>
+			<div className="flex justify-between items-center">
+				<div>
+					<h1 className="text-3xl font-bold ">Accounts</h1>
+					<p className="text-gray-600 dark:text-gray-200 mt-2">
+						Manage all user accounts and students in the system
+					</p>
+				</div>
+				<AddTeacherModal />
 			</div>
 
 			{/* Stats Cards */}
@@ -193,7 +283,7 @@ const AccountsPage = () => {
 							</div>
 						</CardHeader>
 						<CardContent>
-							{filteredUsers.length === 0 ? (
+							{paginatedUsers.length === 0 ? (
 								<div className="text-center py-8 text-gray-50 dark:bg-blue-900/10">
 									<Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
 									<p>No users found.</p>
@@ -207,10 +297,11 @@ const AccountsPage = () => {
 											<TableHead>Email</TableHead>
 											<TableHead>User ID</TableHead>
 											<TableHead>Created</TableHead>
+											<TableHead className="text-right">Actions</TableHead>
 										</TableRow>
 									</TableHeader>
 									<TableBody>
-										{filteredUsers.map((user: any) => (
+										{paginatedUsers.map((user: any) => (
 											<TableRow key={user._id}>
 												<TableCell className="font-medium">
 													{user.name}
@@ -229,11 +320,42 @@ const AccountsPage = () => {
 														"MMM d, yyyy",
 													)}
 												</TableCell>
+												<TableCell className="text-right">
+													<DropdownMenu>
+														<DropdownMenuTrigger asChild>
+															<Button variant="ghost" size="sm">
+																<MoreVertical className="h-4 w-4" />
+															</Button>
+														</DropdownMenuTrigger>
+														<DropdownMenuContent align="end">
+															<DropdownMenuItem
+																onClick={() =>
+																	handleEditUser(user)
+																}>
+																<Edit className="h-4 w-4 mr-2" />
+																Edit User
+															</DropdownMenuItem>
+															<DropdownMenuItem
+																onClick={() =>
+																	handleDeleteUserClick(user)
+																}
+																className="text-red-600">
+																<Trash2 className="h-4 w-4 mr-2" />
+																Delete User
+															</DropdownMenuItem>
+														</DropdownMenuContent>
+													</DropdownMenu>
+												</TableCell>
 											</TableRow>
 										))}
 									</TableBody>
 								</Table>
 							)}
+							<PaginationControls
+								currentPage={userPage}
+								totalItems={filteredUsers.length}
+								onPageChange={setUserPage}
+							/>
 						</CardContent>
 					</Card>
 				</TabsContent>
@@ -264,7 +386,7 @@ const AccountsPage = () => {
 							</div>
 						</CardHeader>
 						<CardContent>
-							{filteredStudents.length === 0 ? (
+							{paginatedStudents.length === 0 ? (
 								<div className="text-center py-8 text-gray-50 dark:bg-blue-900/10">
 									<GraduationCap className="h-12 w-12 mx-auto mb-4 text-gray-300" />
 									<p>No students found.</p>
@@ -282,7 +404,7 @@ const AccountsPage = () => {
 										</TableRow>
 									</TableHeader>
 									<TableBody>
-										{filteredStudents.map((student) => (
+										{paginatedStudents.map((student) => (
 											<TableRow key={student._id}>
 												<TableCell className="font-medium">
 													{student.firstName} {student.middleName}{" "}
@@ -312,8 +434,32 @@ const AccountsPage = () => {
 							)}
 						</CardContent>
 					</Card>
+					<PaginationControls
+						currentPage={studentPage}
+						totalItems={filteredStudents.length}
+						onPageChange={setStudentPage}
+					/>
 				</TabsContent>
 			</Tabs>
+
+			<EditUserModal
+				open={isEditUserOpen}
+				onClose={() => setEditUserOpen(false)}
+				user={selectedUser}
+			/>
+
+			<DeleteDialog
+				isOpen={isDeleteUserOpen}
+				onClose={() => {
+					setDeleteUserOpen(false);
+					setSelectedUser(null);
+				}}
+				onConfirm={handleConfirmDeleteUser}
+				title="Delete User"
+				description={`Are you sure you want to delete ${selectedUser?.name}? This action cannot be undone.`}
+				confirmLabel="Delete User"
+				confirmClassName="bg-red-600 hover:bg-red-700"
+			/>
 		</div>
 	);
 };
