@@ -1,10 +1,12 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useAttendance } from "@/hooks/use-attendance";
 import { useStudent } from "@/hooks/use-student";
+import { CameraSelector } from "@/components/features/camera-selector";
+import { useCamera } from "@/hooks/use-camera";
 
 interface FaceCaptureProps {
 	onSuccess: (enrolled: { id: string; name: string }) => void;
@@ -13,9 +15,8 @@ interface FaceCaptureProps {
 }
 
 const FaceCapture = ({ onSuccess, studentName, studentId }: FaceCaptureProps) => {
-	const videoRef = useRef<HTMLVideoElement>(null);
+	const videoRef = useRef<HTMLVideoElement>(null!) as React.RefObject<HTMLVideoElement>;
 	const canvasRef = useRef<HTMLCanvasElement>(null);
-	const [isStreaming, setIsStreaming] = useState(false);
 	const [isCapturing, setIsCapturing] = useState(false);
 	const [hasCaptured, setHasCaptured] = useState(false);
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -23,29 +24,18 @@ const FaceCapture = ({ onSuccess, studentName, studentId }: FaceCaptureProps) =>
 	const { enrollFace } = useAttendance();
 	const { uploadImage } = useStudent();
 
-	const startCamera = useCallback(async () => {
-		try {
-			const stream = await navigator.mediaDevices.getUserMedia({
-				video: { width: 640, height: 480, facingMode: "user" },
-			});
-			if (videoRef.current) {
-				videoRef.current.srcObject = stream;
-				setIsStreaming(true);
-			}
-		} catch (error) {
-			console.error("Camera access failed:", error);
-			toast.error("Unable to access camera. Please check permissions.");
-		}
-	}, []);
-
-	const stopCamera = useCallback(() => {
-		if (videoRef.current?.srcObject) {
-			const stream = videoRef.current.srcObject as MediaStream;
-			stream.getTracks().forEach((track) => track.stop());
-			videoRef.current.srcObject = null;
-			setIsStreaming(false);
-		}
-	}, []);
+	const {
+		devices,
+		selectedDeviceId,
+		setSelectedDeviceId,
+		startCamera,
+		stopCamera,
+		switchCamera,
+		isStreaming,
+		isLoading,
+	} = useCamera({
+		onError: (msg) => toast.error(msg),
+	});
 
 	const captureImage = useCallback(() => {
 		if (!videoRef.current || !canvasRef.current) return;
@@ -73,7 +63,7 @@ const FaceCapture = ({ onSuccess, studentName, studentId }: FaceCaptureProps) =>
 	const reset = () => {
 		setHasCaptured(false);
 		setImagePreview(null);
-		startCamera();
+		startCamera(videoRef);
 	};
 
 	const handleEnroll = async () => {
@@ -88,16 +78,11 @@ const FaceCapture = ({ onSuccess, studentName, studentId }: FaceCaptureProps) =>
 
 				const file = new File([blob], "face.jpg", { type: "image/jpeg" });
 
-				// Upload to student's profile image
 				uploadImage.mutate(
 					{ studentId, file },
 					{
-						onSuccess: () => {
-							toast.success("Student image uploaded.");
-						},
-						onError: () => {
-							toast.error("Image upload failed.");
-						},
+						onSuccess: () => toast.success("Student image uploaded."),
+						onError: () => toast.error("Image upload failed."),
 					},
 				);
 
@@ -118,11 +103,6 @@ const FaceCapture = ({ onSuccess, studentName, studentId }: FaceCaptureProps) =>
 		);
 	};
 
-	useEffect(() => {
-		startCamera();
-		return () => stopCamera();
-	}, [startCamera, stopCamera]);
-
 	return (
 		<Card className="w-full max-w-xl mx-auto">
 			<CardHeader>
@@ -132,6 +112,15 @@ const FaceCapture = ({ onSuccess, studentName, studentId }: FaceCaptureProps) =>
 				</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
+				<CameraSelector
+					devices={devices}
+					selectedDeviceId={selectedDeviceId}
+					onDeviceChange={setSelectedDeviceId}
+					switchCamera={switchCamera}
+					videoRef={videoRef}
+					isStreaming={isStreaming}
+				/>
+
 				<div className="relative bg-gray-900 rounded-lg overflow-hidden">
 					<video
 						ref={videoRef}
@@ -161,9 +150,12 @@ const FaceCapture = ({ onSuccess, studentName, studentId }: FaceCaptureProps) =>
 
 				<div className="flex justify-center space-x-3">
 					{!isStreaming && !hasCaptured && (
-						<Button onClick={startCamera} className="flex items-center gap-2">
+						<Button
+							onClick={() => startCamera(videoRef)}
+							disabled={isLoading}
+							className="flex items-center gap-2">
 							<Camera className="h-4 w-4" />
-							Start Camera
+							{isLoading ? "Starting..." : "Start Camera"}
 						</Button>
 					)}
 

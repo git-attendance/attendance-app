@@ -23,6 +23,7 @@ import type { CalendarView, EventModel } from "@/models/event-model";
 import { useAuth } from "@/contexts/auth-context";
 import { eventTypeConfig, type EventTypeMeta } from "@/configs/event-types";
 import { YearView } from "./year-view";
+import { TeacherSelector } from "../features/user-selector";
 
 export const CalendarTemplate = () => {
 	const [currentDate, setCurrentDate] = useState(new Date());
@@ -34,6 +35,11 @@ export const CalendarTemplate = () => {
 
 	const { user } = useAuth();
 	const { data: events = [] } = useEvents("");
+
+	const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(
+		user?.role === "admin" ? user._id : null,
+	);
+
 	const createEventMutation = useCreateEvent();
 	const updateEventMutation = useUpdateEvent();
 	const deleteEventMutation = useDeleteEvent();
@@ -112,7 +118,7 @@ export const CalendarTemplate = () => {
 	};
 
 	const handleDeleteEvent = (eventId: string) => {
-		const event = events.find((e) => e._id === eventId);
+		const event = filteredEvents.find((e) => e._id === eventId);
 		if (event) setEventToDelete(event);
 	};
 
@@ -127,9 +133,19 @@ export const CalendarTemplate = () => {
 		setIsCreateModalOpen(true);
 	};
 
+	// Filter events by selectedTeacherId if admin
+	const filteredEvents = useMemo(() => {
+		if (user?.role === "admin") {
+			if (!selectedTeacherId) return events; // show all
+			return events.filter((e) => e.organizerId === selectedTeacherId);
+		}
+		// non-admins: only their own events
+		return events.filter((e) => e.organizerId === user?._id);
+	}, [events, user, selectedTeacherId]);
+
 	const selectedDateEvents = useMemo(
-		() => getEventsForDate(selectedDate, events),
-		[selectedDate, events],
+		() => getEventsForDate(selectedDate, filteredEvents),
+		[selectedDate, filteredEvents],
 	);
 
 	return (
@@ -142,6 +158,9 @@ export const CalendarTemplate = () => {
 				onViewChange={setView}
 				onToday={handleToday}
 				onCreateEventClick={() => setIsCreateModalOpen(true)}
+				extendedSlot={
+					<TeacherSelector value={selectedTeacherId} onChange={setSelectedTeacherId} />
+				}
 			/>
 
 			<div className="flex">
@@ -149,7 +168,7 @@ export const CalendarTemplate = () => {
 					{view === "year" && (
 						<YearView
 							currentDate={currentDate}
-							events={events}
+							events={filteredEvents}
 							selectedDate={selectedDate}
 							onDateSelect={handleDateSelect}
 							onEventClick={handleEventClick}
@@ -160,7 +179,7 @@ export const CalendarTemplate = () => {
 					{view === "month" && (
 						<MonthView
 							currentDate={currentDate}
-							events={events}
+							events={filteredEvents}
 							selectedDate={selectedDate}
 							onDateSelect={handleDateSelect}
 							onEventClick={handleEventClick}
@@ -171,7 +190,7 @@ export const CalendarTemplate = () => {
 					{view === "week" && (
 						<WeekView
 							currentDate={currentDate}
-							events={events}
+							events={filteredEvents}
 							selectedDate={selectedDate}
 							onDateSelect={handleDateSelect}
 							onEventClick={handleEventClick}
@@ -182,7 +201,7 @@ export const CalendarTemplate = () => {
 					{view === "day" && (
 						<DayView
 							currentDate={currentDate}
-							events={events}
+							events={filteredEvents}
 							onEventClick={handleEventClick}
 							onEditEvent={handleEditEvent}
 							onDeleteEvent={handleDeleteEvent}

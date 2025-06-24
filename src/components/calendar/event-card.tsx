@@ -47,7 +47,9 @@ export const EventCard = ({
 		}
 	};
 
-	const showActions = isAdmin && (onEdit || onDelete);
+	const isEventOwner = user?.role === "teacher" && user._id === event.organizerId;
+	const showActions = (isAdmin || isEventOwner) && (onEdit || onDelete);
+
 	const startDate = new Date(event.startDate ?? 0);
 	const endDate = new Date(event.endDate ?? 0);
 	const isSameDay = startDate.toDateString() === endDate.toDateString();

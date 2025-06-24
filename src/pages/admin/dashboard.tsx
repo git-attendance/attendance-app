@@ -9,6 +9,7 @@ import { useStudent } from "@/hooks/use-student";
 import { formatDate } from "@/utils/common";
 
 import type { AttendanceModel } from "@/models/attendance-model";
+import Avatar from "@/components/ui/avatar";
 
 const Dashboard = () => {
 	const { user } = useAuth();
@@ -97,6 +98,19 @@ const Dashboard = () => {
 		},
 	];
 
+	const [currentPage, setCurrentPage] = useState(1);
+	const pageSize = 5;
+
+	const paginatedAttendance = useMemo(() => {
+		const sorted = [...filteredTodayAttendance].sort(
+			(a, b) => new Date(b.checkInTime).getTime() - new Date(a.checkInTime).getTime(),
+		);
+		const startIndex = (currentPage - 1) * pageSize;
+		return sorted.slice(startIndex, startIndex + pageSize);
+	}, [filteredTodayAttendance, currentPage]);
+
+	const totalPages = Math.ceil(filteredTodayAttendance.length / pageSize);
+
 	return (
 		<div className="p-2 space-y-6">
 			{/* Header */}
@@ -141,59 +155,73 @@ const Dashboard = () => {
 							<p className="text-sm">Students will appear here when they check in.</p>
 						</div>
 					) : (
-						<div className="space-y-3">
-							{filteredTodayAttendance
-								.sort(
-									(a, b) =>
-										new Date(b.checkInTime).getTime() -
-										new Date(a.checkInTime).getTime(),
-								)
-								.slice(0, 5)
-								.map((record) => {
+						<>
+							<div className="space-y-3">
+								{paginatedAttendance.map((record) => {
 									const student = students.find(
 										(s) => s._id === record.studentId,
 									);
 									if (!student) return null;
-
-									const initials = `${student.firstName[0] ?? ""}${student.lastName[0] ?? ""}`;
 
 									return (
 										<div
 											key={`${record.studentId}-${record.checkInTime}`}
 											className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
 											<div className="flex items-center space-x-3">
-												<div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-													<span className="text-blue-600 dark:text-blue-300 font-semibold">
-														{initials}
-													</span>
-												</div>
+												<Avatar
+													src={student.image}
+													alt={`${student.firstName} ${student.lastName}`}
+													size="medium"
+												/>
 												<div>
-													<p className="font-medium text-gray-900 dark:text-white">
+													<p className="font-medium text-2xl text-gray-900 dark:text-white">
 														{student.firstName} {student.lastName}
 													</p>
-													<p className="text-sm text-gray-500 dark:text-gray-300">
-														{student.section}{" "}
+													<p className="text-lg text-gray-500 dark:text-gray-300">
+														{student.section}
 														{student.strand
-															? `- ${student.strand}`
+															? ` - ${student.strand}`
 															: ""}
 													</p>
 												</div>
 											</div>
 											<div className="text-right">
-												<p className="text-sm font-medium text-gray-900 dark:text-white">
+												<p className="text-lg font-medium text-gray-900 dark:text-white">
 													{format(
 														new Date(record.checkInTime),
 														"h:mm aa",
 													)}
 												</p>
-												<p className="text-xs text-green-600 dark:text-green-400">
+												<p className="text-sm text-green-600 dark:text-green-400">
 													Present
 												</p>
 											</div>
 										</div>
 									);
 								})}
-						</div>
+							</div>
+
+							{/* Pagination */}
+							{totalPages > 1 && (
+								<div className="flex justify-end items-center gap-4 mt-6">
+									<button
+										className="text-sm px-3 py-1 bg-gray-200 dark:bg-gray-600 rounded disabled:opacity-50"
+										disabled={currentPage === 1}
+										onClick={() => setCurrentPage((prev) => prev - 1)}>
+										Previous
+									</button>
+									<span className="text-sm text-gray-700 dark:text-gray-300">
+										Page {currentPage} of {totalPages}
+									</span>
+									<button
+										className="text-sm px-3 py-1 bg-gray-200 dark:bg-gray-600 rounded disabled:opacity-50"
+										disabled={currentPage === totalPages}
+										onClick={() => setCurrentPage((prev) => prev + 1)}>
+										Next
+									</button>
+								</div>
+							)}
+						</>
 					)}
 				</CardContent>
 			</Card>

@@ -11,130 +11,95 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { TrendingUp, UserCheck, UserX } from "lucide-react";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval } from "date-fns";
-import { useAttendance } from "@/contexts/attendance-context";
+import { useStudent } from "@/hooks/use-student";
+import { useAttendance } from "@/hooks/use-attendance";
 
 const AttendanceReports = () => {
-	const { state } = useAttendance();
+	const { getAll: getStudents } = useStudent();
+	const { getToday } = useAttendance();
+
+	const { data: students = [] } = getStudents();
+	const { data: todayData } = getToday;
+	const attendanceRecords = todayData?.records || [];
+
 	const [reportType, setReportType] = useState<"daily" | "weekly" | "monthly" | "yearly">(
-		"daily",
+		"weekly",
 	);
 	const [chartType, setChartType] = useState<"bar" | "line">("bar");
 
-	// TODAY
-	const todayData = useMemo(() => {
+	const todayDataChart = useMemo(() => {
 		const today = new Date();
-		const dateStr = today.toDateString();
-
-		const todayAttendance = state.attendanceRecords.filter(
-			(record) => new Date(record.timeIn).toDateString() === dateStr,
-		);
-
 		return [
 			{
 				day: format(today, "MMM dd"),
-				present: todayAttendance.length,
-				absent: state.students.length - todayAttendance.length,
-				total: state.students.length,
+				present: attendanceRecords.length,
+				absent: students.length - attendanceRecords.length,
+				total: students.length,
 			},
 		];
-	}, [state.attendanceRecords, state.students]);
+	}, [attendanceRecords, students]);
 
-	// LAST 7 DAYS
-	const dailyData = useMemo(() => {
-		const data = [];
-		for (let i = 6; i >= 0; i--) {
-			const date = new Date();
-			date.setDate(date.getDate() - i);
-			const dayStr = date.toDateString();
-
-			const dayAttendance = state.attendanceRecords.filter(
-				(record) => new Date(record.timeIn).toDateString() === dayStr,
-			);
-
-			data.push({
-				day: format(date, "MMM dd"),
-				present: dayAttendance.length,
-				absent: state.students.length - dayAttendance.length,
-				total: state.students.length,
-			});
-		}
-		return data;
-	}, [state.attendanceRecords, state.students]);
-
-	// THIS WEEK
 	const weeklyData = useMemo(() => {
 		const today = new Date();
 		const weekStart = startOfWeek(today, { weekStartsOn: 1 });
 		const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 		const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
-
 		return daysInWeek.map((day) => {
-			const dayStr = day.toDateString();
-			const dayAttendance = state.attendanceRecords.filter(
-				(record) => new Date(record.timeIn).toDateString() === dayStr,
+			const dayAttendance = attendanceRecords.filter(
+				(record) => new Date(record.checkInTime).toDateString() === day.toDateString(),
 			);
-
 			return {
 				day: format(day, "EEE"),
 				date: format(day, "MMM dd"),
 				present: dayAttendance.length,
-				absent: state.students.length - dayAttendance.length,
-				total: state.students.length,
+				absent: students.length - dayAttendance.length,
+				total: students.length,
 			};
 		});
-	}, [state.attendanceRecords, state.students]);
+	}, [attendanceRecords, students]);
 
-	// THIS MONTH
 	const monthlyData = useMemo(() => {
 		const currentDate = new Date();
 		const daysInMonth = eachDayOfInterval({
 			start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
 			end: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0),
 		});
-
 		return daysInMonth.map((day) => {
-			const dayStr = day.toDateString();
-			const dayAttendance = state.attendanceRecords.filter(
-				(record) => new Date(record.timeIn).toDateString() === dayStr,
+			const dayAttendance = attendanceRecords.filter(
+				(record) => new Date(record.checkInTime).toDateString() === day.toDateString(),
 			);
-
 			return {
 				day: format(day, "MMM dd"),
 				present: dayAttendance.length,
-				absent: state.students.length - dayAttendance.length,
-				total: state.students.length,
+				absent: students.length - dayAttendance.length,
+				total: students.length,
 			};
 		});
-	}, [state.attendanceRecords, state.students]);
+	}, [attendanceRecords, students]);
 
-	// THIS YEAR
 	const yearlyData = useMemo(() => {
 		const currentYear = new Date().getFullYear();
 		const months = Array.from({ length: 12 }, (_, i) => new Date(currentYear, i, 1));
-
 		return months.map((monthDate) => {
 			const month = monthDate.getMonth();
 			const year = monthDate.getFullYear();
-
-			const monthlyRecords = state.attendanceRecords.filter((record) => {
-				const time = new Date(record.timeIn);
+			const monthlyRecords = attendanceRecords.filter((record) => {
+				const time = new Date(record.checkInTime);
 				return time.getFullYear() === year && time.getMonth() === month;
 			});
-
 			return {
 				day: format(monthDate, "MMM"),
 				present: monthlyRecords.length,
-				absent: state.students.length * 20 - monthlyRecords.length, // estimated 20 days/month
-				total: state.students.length,
+				absent: students.length * 20 - monthlyRecords.length,
+				total: students.length,
 			};
 		});
-	}, [state.attendanceRecords, state.students]);
+	}, [attendanceRecords, students]);
 
-	// Choose which chart data to use
 	const chartData = useMemo(() => {
 		switch (reportType) {
 			case "daily":
-				return todayData;
+				return todayDataChart;
 			case "weekly":
 				return weeklyData;
 			case "monthly":
@@ -142,23 +107,17 @@ const AttendanceReports = () => {
 			case "yearly":
 				return yearlyData;
 			default:
-				return dailyData;
+				return todayDataChart;
 		}
-	}, [reportType, todayData, dailyData, weeklyData, monthlyData, yearlyData]);
+	}, [reportType, todayDataChart, weeklyData, monthlyData, yearlyData]);
 
 	const chartConfig = {
-		present: {
-			label: "Present",
-			color: "#10B981",
-		},
-		absent: {
-			label: "Absent",
-			color: "#EF4444",
-		},
+		present: { label: "Present", color: "#10B981" },
+		absent: { label: "Absent", color: "#EF4444" },
 	};
 
 	return (
-		<div className="p-6 space-y-6 bg-white dark:bg-gray-900 min-h-screen">
+		<div className="p-6 space-y-6  min-h-screen">
 			<div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
 				<div>
 					<h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
@@ -205,7 +164,7 @@ const AttendanceReports = () => {
 					</CardHeader>
 					<CardContent>
 						<div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-							{state.students.length}
+							{students.length}
 						</div>
 						<p className="text-xs text-muted-foreground dark:text-gray-400">
 							Registered students
