@@ -22,53 +22,38 @@ import { format } from "date-fns";
 import { useAttendance } from "@/hooks/use-attendance";
 import { useStudent } from "@/hooks/use-student";
 import { toast } from "sonner";
-import type { StudentModel, StudentRemarks } from "@/models/student-model";
-import type { AttendanceModel } from "@/models/attendance-model";
+import type { StudentRemarks } from "@/models/student-model";
+
+const ITEMS_PER_PAGE = 10;
 
 const AttendanceList = () => {
-	const { getToday } = useAttendance();
+	const { getToday, exportCSV } = useAttendance();
 	const { data: todayData = { records: [], present: 0, absent: 0 } } = getToday;
-	const { getAll, update } = useStudent();
-	const { data: students = [] } = getAll();
-	const updateStudent = update;
+	const { update: updateStudent, exportCSV: exportStudentsCSV } = useStudent();
+
 	const [selectedDate, setSelectedDate] = useState<string>("today");
 	const [selectedStatus, setSelectedStatus] = useState<string>("all");
 	const [page, setPage] = useState(1);
 	const [editingId, setEditingId] = useState<string | null>(null);
 
-	const ITEMS_PER_PAGE = 10;
-
-	const attendanceMap = useMemo(() => {
-		const map = new Map<string, AttendanceModel>();
-		todayData.records.forEach((rec) => {
-			if (rec.studentId && typeof rec.studentId === "object") {
-				map.set(rec.studentId._id, rec);
-			}
-		});
-		return map;
-	}, [todayData.records]);
-
 	const enrichedData = useMemo(() => {
-		return students.map((student) => {
-			const attendance = attendanceMap.get(student._id);
-			let status: string;
-
-			if (!attendance || attendance.attendanceStatus === undefined) {
-				status = "No Status";
-			} else if (attendance.attendanceStatus === "present") {
-				status = "Present";
-			} else {
-				status = "Absent";
-			}
-
+		return todayData.records.map((record) => {
+			const student = record.studentId;
 			return {
-				...student,
-				status,
-				timeIn: attendance ? format(new Date(attendance.checkInTime), "HH:mm") : "-",
+				_id: student._id,
+				studentId: student.studentId,
+				firstName: student.firstName,
+				lastName: student.lastName,
+				gradeLevel: student.gradeLevel,
+				section: student.section,
+				strand: student.strand || "-",
+				remarks: student.remarks || "none",
+				status: record.attendanceStatus === "present" ? "Present" : "Absent",
+				timeIn: record.checkInTime ? format(new Date(record.checkInTime), "HH:mm") : "-",
 				date: format(new Date(), "MMM dd, yyyy"),
 			};
 		});
-	}, [students, attendanceMap]);
+	}, [todayData.records]);
 
 	const filteredData = useMemo(() => {
 		const filtered = enrichedData.filter((item) => {
@@ -88,53 +73,72 @@ const AttendanceList = () => {
 	const presentCount = filteredData.filter((item) => item.status === "Present").length;
 	const absentCount = filteredData.filter((item) => item.status === "Absent").length;
 
-	const exportToCSV = () => {
-		const headers = [
-			"Student ID",
-			"Full Name",
-			"Grade",
-			"Section",
-			"Strand",
-			"Status",
-			"Time In",
-			"Date",
-			"Remarks",
-		];
-		const csvContent = [
-			headers.join(","),
-			...filteredData.map((item) =>
-				[
-					item.studentId,
-					`"${item.firstName} ${item.lastName}"`,
-					item.gradeLevel,
-					item.section,
-					item.strand || "",
-					item.status,
-					item.timeIn,
-					item.date,
-					`"${item.remarks || ""}"`,
-				].join(","),
-			),
-		].join("\n");
-		const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-		const link = document.createElement("a");
-		link.href = URL.createObjectURL(blob);
-		link.download = `attendance_list_${format(new Date(), "yyyy-MM-dd")}.csv`;
-		link.click();
-	};
-
-	const handleInlineUpdate = async (student: StudentModel, remarks: StudentRemarks) => {
+	const handleInlineUpdate = async (student: any, remarks: StudentRemarks) => {
 		await updateStudent.mutateAsync({ ...student, remarks });
 		toast.success("Remarks updated");
 		setEditingId(null);
 	};
 
+	const handleExportToday = async () => {
+		try {
+			const csvData = await exportCSV.mutateAsync(undefined);
+
+			// Create blob from CSV data
+			const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+
+			// Create download link
+			const link = document.createElement("a");
+			const url = URL.createObjectURL(blob);
+			link.setAttribute("href", url);
+			link.setAttribute(
+				"download",
+				`attendance-today-${format(new Date(), "yyyy-MM-dd")}.csv`,
+			);
+			link.style.visibility = "hidden";
+
+			// Trigger download
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
+
+			toast.success("Attendance exported successfully");
+		} catch (error) {
+			console.error("Export failed:", error);
+		}
+	};
+
+	const handleExportAll = async () => {
+		try {
+			const csvData = await exportStudentsCSV.mutateAsync();
+
+			// Create blob from CSV data
+			const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+
+			// Create download link
+			const link = document.createElement("a");
+			const url = URL.createObjectURL(blob);
+			link.setAttribute("href", url);
+			link.setAttribute("download", `all-students-${format(new Date(), "yyyy-MM-dd")}.csv`);
+			link.style.visibility = "hidden";
+
+			// Trigger download
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
+
+			toast.success("Students exported successfully");
+		} catch (error) {
+			console.error("Export failed:", error);
+		}
+	};
+
 	return (
 		<div className="p-6 space-y-6 min-h-screen">
+			{/* Header + Filters */}
 			<div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
-				<h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-					Attendance Reports / List
-				</h1>
+				<h1 className="text-3xl font-bold">Attendance Reports / List</h1>
 				<div className="flex flex-col sm:flex-row gap-4">
 					<Select value={selectedDate} onValueChange={setSelectedDate}>
 						<SelectTrigger className="w-[200px]">
@@ -156,60 +160,52 @@ const AttendanceList = () => {
 							<SelectItem value="absent">Absent</SelectItem>
 						</SelectContent>
 					</Select>
-					<Button onClick={exportToCSV} className="flex items-center gap-2">
-						<Download className="h-4 w-4" /> Export to CSV
+					<Button onClick={handleExportAll}>
+						<Download className="w-4 h-4 mr-2" /> Export All
+					</Button>
+					<Button onClick={handleExportToday}>
+						<Download className="w-4 h-4 mr-2" /> Export Today
 					</Button>
 				</div>
 			</div>
 
-			{/* Summary Stats */}
+			{/* Stats */}
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 				<Card className="bg-gray-50 dark:bg-gray-800">
 					<CardContent className="p-4 flex items-center">
-						<Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+						<Users className="h-8 w-8 text-blue-600" />
 						<div className="ml-4">
-							<p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-								Total Students
-							</p>
-							<p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-								{filteredData.length}
-							</p>
+							<p className="text-sm text-gray-600">Total Students</p>
+							<p className="text-2xl font-bold">{filteredData.length}</p>
 						</div>
 					</CardContent>
 				</Card>
 				<Card className="bg-gray-50 dark:bg-gray-800">
 					<CardContent className="p-4 flex items-center">
-						<div className="h-8 w-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-							<span className="text-green-600 dark:text-green-300 font-bold">✓</span>
+						<div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
+							<span className="text-green-600 font-bold">✓</span>
 						</div>
 						<div className="ml-4">
-							<p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-								Present
-							</p>
-							<p className="text-2xl font-bold text-green-600 dark:text-green-300">
-								{presentCount}
-							</p>
+							<p className="text-sm text-gray-600">Present</p>
+							<p className="text-2xl font-bold text-green-600">{presentCount}</p>
 						</div>
 					</CardContent>
 				</Card>
 				<Card className="bg-gray-50 dark:bg-gray-800">
 					<CardContent className="p-4 flex items-center">
-						<div className="h-8 w-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
-							<span className="text-red-600 dark:text-red-300 font-bold">✗</span>
+						<div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
+							<span className="text-red-600 font-bold">✗</span>
 						</div>
 						<div className="ml-4">
-							<p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-								Absent
-							</p>
-							<p className="text-2xl font-bold text-red-600 dark:text-red-300">
-								{absentCount}
-							</p>
+							<p className="text-sm text-gray-600">Absent</p>
+							<p className="text-2xl font-bold text-red-600">{absentCount}</p>
 						</div>
 					</CardContent>
 				</Card>
 			</div>
 
-			<Card className="bg-gray-50 dark:bg-gray-800">
+			{/* Attendance Table */}
+			<Card className="dark:bg-gray-800">
 				<CardHeader>
 					<CardTitle>Attendance Records ({filteredData.length})</CardTitle>
 				</CardHeader>
@@ -237,7 +233,7 @@ const AttendanceList = () => {
 									</TableCell>
 									<TableCell>{item.gradeLevel}</TableCell>
 									<TableCell>{item.section}</TableCell>
-									<TableCell>{item.strand || "-"}</TableCell>
+									<TableCell>{item.strand}</TableCell>
 									<TableCell>
 										<Badge
 											className={
@@ -256,7 +252,7 @@ const AttendanceList = () => {
 										{editingId === item._id ? (
 											<div className="flex items-center gap-2">
 												<Select
-													value={item.remarks || "none"}
+													value={item.remarks}
 													onValueChange={(val) =>
 														handleInlineUpdate(
 															item,
@@ -264,7 +260,7 @@ const AttendanceList = () => {
 														)
 													}>
 													<SelectTrigger className="w-[160px] h-8">
-														<SelectValue placeholder="Remarks" />
+														<SelectValue />
 													</SelectTrigger>
 													<SelectContent>
 														<SelectItem value="none">None</SelectItem>
@@ -296,16 +292,13 @@ const AttendanceList = () => {
 												<Button
 													variant="ghost"
 													size="icon"
-													onClick={() => setEditingId(null)}
-													aria-label="Cancel">
-													<span className="text-lg leading-none">
-														&times;
-													</span>
+													onClick={() => setEditingId(null)}>
+													&times;
 												</Button>
 											</div>
 										) : (
 											<div className="flex items-center gap-2">
-												<span>{item.remarks || "None"}</span>
+												<span>{item.remarks}</span>
 												<Button
 													variant="ghost"
 													size="icon"
@@ -322,6 +315,7 @@ const AttendanceList = () => {
 				</CardContent>
 			</Card>
 
+			{/* Pagination */}
 			<div className="flex justify-center gap-4 pt-4">
 				<Button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
 					Previous

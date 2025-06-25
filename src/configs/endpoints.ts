@@ -10,14 +10,6 @@ export const API_BASE_URL = isLocalhost
 			? ""
 			: "";
 
-export const SOCKET_URL = isLocalhost
-	? "http://localhost:5000"
-	: isDevEnvironment
-		? ""
-		: isTestEnvironment
-			? ""
-			: "";
-
 export const FACE_BASE_URL = "https://api.luxand.cloud";
 export const FACE_TOKEN = "f491b27fcab246a6a35632e1756b373c";
 
@@ -84,9 +76,10 @@ export const API_ENDPOINTS = {
 		TODAY: "/attendance/today",
 		HISTORY: "/attendance/history",
 		STUDENT_STATUS: "/attendance/student-status",
-		SUBJECT_STATS: "/attendance/subject/:subjectId/stats",
+		SUBJECT_STATS: "/attendance/subject/stats",
 		SUBJECT_STUDENTS_STATUS: "/attendance/subject/:subjectId/students-status",
 		TEST_SMS: "/attendance/test-sms",
 		OVERALL_STATS: "/attendance/stats",
+		EXPORT_CSV: "/attendance/export",
 	},
 };

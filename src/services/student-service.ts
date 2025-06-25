@@ -68,15 +68,36 @@ export class StudentService extends APIService {
 		});
 	}
 
-	async exportCSV(): Promise<{ blob: Blob; filename: string }> {
+	async exportCSV(): Promise<string> {
 		const url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.STUDENTS.EXPORT_CSV}`;
-		const response = await this.asyncFetch.get(url);
 
-		const contentDisposition = response.headers.get("Content-Disposition");
-		const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
-		const filename = filenameMatch?.[1] ?? "students.csv";
+		// Handle CSV response manually since it's not JSON
+		const auth = localStorage.getItem("auth");
+		const authData = auth ? JSON.parse(auth) : null;
 
-		const blob = await response.blob();
-		return { blob, filename };
+		const headers: Record<string, string> = authData
+			? { Authorization: `Bearer ${authData.token}` }
+			: {};
+
+		const response = await fetch(url, {
+			method: "GET",
+			headers,
+		});
+
+		if (!response.ok) {
+			let errorBody = null;
+			try {
+				errorBody = await response.json();
+			} catch (_) {
+				errorBody = { message: "Unknown error" };
+			}
+			throw {
+				status: response.status,
+				response: errorBody,
+			};
+		}
+
+		// Return the CSV text directly
+		return await response.text();
 	}
 }
