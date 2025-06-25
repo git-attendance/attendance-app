@@ -30,6 +30,7 @@ import { UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { toast } from "sonner";
 import InputWithToggle from "../ui/input-toggle";
+import { useQueryClient } from "@tanstack/react-query";
 
 const teacherSchema = z.object({
 	name: z.string().min(2, "Name must be at least 2 characters"),
@@ -45,6 +46,7 @@ export const AddTeacherModal = () => {
 	const { register } = useAuth();
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const queryClient = useQueryClient();
 
 	const form = useForm<TeacherFormData>({
 		resolver: zodResolver(teacherSchema),
@@ -61,11 +63,11 @@ export const AddTeacherModal = () => {
 		setLoading(true);
 		try {
 			await register(data);
+			await queryClient.invalidateQueries({ queryKey: ["users"] }); // ✅ auto-refresh
 			toast.success("Teacher account created successfully.");
 			form.reset();
 			setIsModalOpen(false);
 		} catch (err) {
-			console.error("Failed to create teacher account:", err);
 			toast.error("Failed to create account. Please try again.");
 		} finally {
 			setLoading(false);
