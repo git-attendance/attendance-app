@@ -1,6 +1,8 @@
 import ETC_LOGO from "../assets/etc-logo.png";
 
 export const APP_CONSTANTS = {
+	APP_SCHOOL_NAME: "Eastern Tayabas College",
+	APP_DESCRIPTION: "Attendance Management System for Eastern Tayabas College",
 	APP_TITLE: "Attendance Management System | App",
 	APP_LOGO: ETC_LOGO,
 	APP_SUBMARK_LOGO: ETC_LOGO,

@@ -1,9 +1,12 @@
+import type { StudentModel } from "./student-model";
+import type { SubjectModel } from "./subject-model";
+
 export interface AttendanceModel {
-	studentId: string;
-	subjectId: string;
+	studentId: StudentModel;
+	subjectId: SubjectModel;
 	personId: string; // Luxand person ID
-	checkInTime: Date;
-	checkOutTime?: Date;
+	checkInTime: string;
+	checkOutTime?: string;
 	status: "checked-in" | "checked-out";
 	attendanceStatus: "present" | "absent"; // New field for tracking attendance status
 	confidence: number; // Face recognition confidence score
