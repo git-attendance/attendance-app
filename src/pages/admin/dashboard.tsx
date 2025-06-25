@@ -1,23 +1,22 @@
 import { useEffect, useState, useMemo } from "react";
 import { format } from "date-fns";
 import { UserCheck, CheckCircle, XCircle, Clock, UserMinus, Users } from "lucide-react";
+
 import StatCard from "@/components/features/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/auth-context";
 import { useAttendance } from "@/hooks/use-attendance";
-import { useStudent } from "@/hooks/use-student";
 import { formatDate } from "@/utils/common";
-
-import type { AttendanceModel } from "@/models/attendance-model";
 import Avatar from "@/components/ui/avatar";
 
 const Dashboard = () => {
 	const { user } = useAuth();
-	const [dateTime, setDateTime] = useState(new Date());
-	const { getAll } = useStudent();
 	const { getToday } = useAttendance();
-	const { data: students = [] } = getAll();
 	const { data: todaySummary } = getToday;
+
+	const [dateTime, setDateTime] = useState(new Date());
+	const [currentPage, setCurrentPage] = useState(1);
+	const pageSize = 5;
 
 	useEffect(() => {
 		const interval = setInterval(() => setDateTime(new Date()), 1000);
@@ -28,9 +27,10 @@ const Dashboard = () => {
 
 	const title = user.role === "teacher" ? "Teacher Dashboard" : "Admin Dashboard";
 
-	const todayAttendance: AttendanceModel[] = todaySummary?.records ?? [];
+	const todayAttendance = todaySummary?.records ?? [];
 	const today = new Date().toDateString();
 
+	// Filter today's attendance only (just in case)
 	const filteredTodayAttendance = useMemo(
 		() =>
 			todayAttendance.filter(
@@ -38,6 +38,14 @@ const Dashboard = () => {
 			),
 		[todayAttendance, today],
 	);
+
+	// Total students from unique student IDs
+	const totalStudents = useMemo(() => {
+		const uniqueIds = new Set(
+			filteredTodayAttendance.filter((r) => r.studentId).map((r) => r.studentId._id),
+		);
+		return uniqueIds.size;
+	}, [filteredTodayAttendance]);
 
 	const lateIn = useMemo(() => {
 		const threshold = new Date();
@@ -48,31 +56,30 @@ const Dashboard = () => {
 		}).length;
 	}, [filteredTodayAttendance]);
 
+	// Excused logic from remarks inside studentId
 	const excused = useMemo(() => {
-		const excusedRemarks = [
+		const remarks = [
 			"excuse",
 			"medical_appointment",
 			"family_emergency",
 			"official_business",
 			"suspension",
 		];
-		return students.filter(
-			(student) => student.remarks && excusedRemarks.includes(student.remarks),
+		return filteredTodayAttendance.filter(
+			(r) => r.studentId?.remarks && remarks.includes(r.studentId.remarks),
 		).length;
-	}, [students]);
+	}, [filteredTodayAttendance]);
 
 	const stats = [
 		{
 			title: "Total Students",
-			value: students.length ?? 0,
+			value: totalStudents,
 			icon: Users,
 			changeType: "neutral",
 		},
 		{
 			title: "Present",
-			value:
-				todaySummary?.present ??
-				todayAttendance.filter((r) => r.attendanceStatus === "present").length,
+			value: todaySummary?.present ?? 0,
 			icon: CheckCircle,
 			changeType: "positive",
 		},
@@ -84,9 +91,7 @@ const Dashboard = () => {
 		},
 		{
 			title: "Absent",
-			value:
-				todaySummary?.absent ??
-				todayAttendance.filter((r) => r.attendanceStatus === "absent").length,
+			value: todaySummary?.absent ?? 0,
 			icon: XCircle,
 			changeType: (todaySummary?.absent ?? 0) > 0 ? "negative" : "neutral",
 		},
@@ -97,9 +102,6 @@ const Dashboard = () => {
 			changeType: "neutral",
 		},
 	];
-
-	const [currentPage, setCurrentPage] = useState(1);
-	const pageSize = 5;
 
 	const paginatedAttendance = useMemo(() => {
 		const sorted = [...filteredTodayAttendance].sort(
@@ -158,14 +160,12 @@ const Dashboard = () => {
 						<>
 							<div className="space-y-3">
 								{paginatedAttendance.map((record) => {
-									const student = students.find(
-										(s) => s._id === record.studentId,
-									);
+									const student = record.studentId;
 									if (!student) return null;
 
 									return (
 										<div
-											key={`${record.studentId}-${record.checkInTime}`}
+											key={`${student._id}-${record.checkInTime}`}
 											className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
 											<div className="flex items-center space-x-3">
 												<Avatar

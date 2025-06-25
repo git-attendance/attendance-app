@@ -176,12 +176,14 @@ const AccountsPage = () => {
 	};
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-8">
 			{/* Header */}
-			<div className="flex justify-between items-center">
+			<div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
 				<div>
-					<h1 className="text-3xl font-bold ">Accounts</h1>
-					<p className="text-gray-600 dark:text-gray-200 mt-2">
+					<h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+						Accounts
+					</h1>
+					<p className="text-gray-500 dark:text-gray-300 mt-1 text-lg">
 						Manage all user accounts and students in the system
 					</p>
 				</div>
@@ -189,64 +191,64 @@ const AccountsPage = () => {
 			</div>
 
 			{/* Stats Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-				<Card className="dark:bg-gray-800 bg-gray-100">
-					<CardContent className="p-6">
-						<div className="flex items-center justify-between">
-							<div>
-								<p className="text-sm font-medium text-gray-600 dark:text-gray-200">
-									Total Accounts
-								</p>
-								<p className="text-2xl font-bold ">{totalAccounts}</p>
-							</div>
-							<div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10">
-								<Users className="h-6 w-6 text-blue-600" />
-							</div>
+			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+				<Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 shadow-md p-4">
+					<CardContent className="p-6 flex items-center gap-4">
+						<div className="flex-1">
+							<p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+								Total Accounts
+							</p>
+							<p className="text-3xl font-bold text-blue-900 dark:text-blue-200">
+								{totalAccounts}
+							</p>
+						</div>
+						<div className="p-3 rounded-full bg-blue-200 dark:bg-blue-900/30">
+							<Users className="h-7 w-7 text-blue-700 dark:text-blue-300" />
 						</div>
 					</CardContent>
 				</Card>
-				<Card className="dark:bg-gray-800 bg-gray-100">
-					<CardContent className="p-6">
-						<div className="flex items-center justify-between">
-							<div>
-								<p className="text-sm font-medium text-gray-600 dark:text-gray-200">
-									Admin Users
-								</p>
-								<p className="text-2xl font-bold ">{adminCount}</p>
-							</div>
-							<div className="p-3 rounded-lg bg-red-50 dark:bg-blue-900/10">
-								<Shield className="h-6 w-6 text-red-600" />
-							</div>
+				<Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-gray-900 dark:to-gray-800 shadow-md p-4">
+					<CardContent className="p-6 flex items-center gap-4">
+						<div className="flex-1">
+							<p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+								Admin Users
+							</p>
+							<p className="text-3xl font-bold text-red-900 dark:text-red-200">
+								{adminCount}
+							</p>
+						</div>
+						<div className="p-3 rounded-full bg-red-200 dark:bg-red-900/30">
+							<Shield className="h-7 w-7 text-red-700 dark:text-red-300" />
 						</div>
 					</CardContent>
 				</Card>
-				<Card className="dark:bg-gray-800 bg-gray-100">
-					<CardContent className="p-6">
-						<div className="flex items-center justify-between">
-							<div>
-								<p className="text-sm font-medium text-gray-600 dark:text-gray-200">
-									Teachers
-								</p>
-								<p className="text-2xl font-bold ">{teacherCount}</p>
-							</div>
-							<div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10">
-								<CreditCard className="h-6 w-6 text-blue-600" />
-							</div>
+				<Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 shadow-md p-4">
+					<CardContent className="p-6 flex items-center gap-4">
+						<div className="flex-1">
+							<p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+								Teachers
+							</p>
+							<p className="text-3xl font-bold text-blue-900 dark:text-blue-200">
+								{teacherCount}
+							</p>
+						</div>
+						<div className="p-3 rounded-full bg-blue-200 dark:bg-blue-900/30">
+							<CreditCard className="h-7 w-7 text-blue-700 dark:text-blue-300" />
 						</div>
 					</CardContent>
 				</Card>
-				<Card className="dark:bg-gray-800 bg-gray-100">
-					<CardContent className="p-6">
-						<div className="flex items-center justify-between">
-							<div>
-								<p className="text-sm font-medium text-gray-600 dark:text-gray-200">
-									Students
-								</p>
-								<p className="text-2xl font-bold ">{totalStudents}</p>
-							</div>
-							<div className="p-3 rounded-lg bg-green-50 dark:bg-blue-900/10">
-								<GraduationCap className="h-6 w-6 text-green-600" />
-							</div>
+				<Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-900 dark:to-gray-800 shadow-md p-4">
+					<CardContent className="p-6 flex items-center gap-4">
+						<div className="flex-1">
+							<p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+								Students
+							</p>
+							<p className="text-3xl font-bold text-green-900 dark:text-green-200">
+								{totalStudents}
+							</p>
+						</div>
+						<div className="p-3 rounded-full bg-green-200 dark:bg-green-900/30">
+							<GraduationCap className="h-7 w-7 text-green-700 dark:text-green-300" />
 						</div>
 					</CardContent>
 				</Card>
@@ -254,24 +256,29 @@ const AccountsPage = () => {
 
 			{/* Tabs */}
 			<Tabs defaultValue="users" className="space-y-6">
-				<TabsList>
-					<TabsTrigger value="users">System Users</TabsTrigger>
-					<TabsTrigger value="students">Students</TabsTrigger>
+				<TabsList className="bg-gray-100 dark:bg-gray-800 rounded-lg p-1 w-fit mx-auto shadow">
+					<TabsTrigger value="users" className="px-6 py-2 text-base">
+						System Users
+					</TabsTrigger>
+					<TabsTrigger value="students" className="px-6 py-2 text-base">
+						Students
+					</TabsTrigger>
 				</TabsList>
 
 				{/* USERS TABLE */}
 				<TabsContent value="users">
-					<Card className="dark:bg-gray-800 bg-gray-100">
-						<CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-							<CardTitle>System Users</CardTitle>
+					<Card className="dark:bg-gray-900 bg-white shadow-lg p-4">
+						<CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-gray-200 dark:border-gray-800">
+							<CardTitle className="text-xl font-bold">System Users</CardTitle>
 							<div className="flex gap-4 w-full md:w-auto flex-col md:flex-row">
 								<Input
 									placeholder="Search name or email..."
 									value={userSearch}
 									onChange={(e) => setUserSearch(e.target.value)}
+									className="rounded-lg border-gray-300 dark:border-gray-700"
 								/>
 								<Select onValueChange={setSelectedRole} value={selectedRole}>
-									<SelectTrigger className="w-full md:w-[180px]">
+									<SelectTrigger className="w-full md:w-[180px] rounded-lg border-gray-300 dark:border-gray-700">
 										<SelectValue placeholder="Filter by role" />
 									</SelectTrigger>
 									<SelectContent>
@@ -282,74 +289,91 @@ const AccountsPage = () => {
 								</Select>
 							</div>
 						</CardHeader>
-						<CardContent>
+						<CardContent className="p-0">
 							{paginatedUsers.length === 0 ? (
-								<div className="text-center py-8 text-gray-50 dark:bg-blue-900/10">
-									<Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-									<p>No users found.</p>
+								<div className="text-center py-12 text-gray-400 dark:bg-blue-900/10">
+									<Users className="h-14 w-14 mx-auto mb-4 text-gray-300" />
+									<p className="text-lg">No users found.</p>
 								</div>
 							) : (
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>Name</TableHead>
-											<TableHead>Role</TableHead>
-											<TableHead>Email</TableHead>
-											<TableHead>User ID</TableHead>
-											<TableHead>Created</TableHead>
-											<TableHead className="text-right">Actions</TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{paginatedUsers.map((user: any) => (
-											<TableRow key={user._id}>
-												<TableCell className="font-medium">
-													{user.name}
-												</TableCell>
-												<TableCell>
-													<Badge className={getRoleColor(user.role)}>
-														{user.role.charAt(0).toUpperCase() +
-															user.role.slice(1)}
-													</Badge>
-												</TableCell>
-												<TableCell>{user.email}</TableCell>
-												<TableCell>{user._id.slice(-8)}</TableCell>
-												<TableCell>
-													{format(
-														new Date(user.createdAt),
-														"MMM d, yyyy",
-													)}
-												</TableCell>
-												<TableCell className="text-right">
-													<DropdownMenu>
-														<DropdownMenuTrigger asChild>
-															<Button variant="ghost" size="sm">
-																<MoreVertical className="h-4 w-4" />
-															</Button>
-														</DropdownMenuTrigger>
-														<DropdownMenuContent align="end">
-															<DropdownMenuItem
-																onClick={() =>
-																	handleEditUser(user)
-																}>
-																<Edit className="h-4 w-4 mr-2" />
-																Edit User
-															</DropdownMenuItem>
-															<DropdownMenuItem
-																onClick={() =>
-																	handleDeleteUserClick(user)
-																}
-																className="text-red-600">
-																<Trash2 className="h-4 w-4 mr-2" />
-																Delete User
-															</DropdownMenuItem>
-														</DropdownMenuContent>
-													</DropdownMenu>
-												</TableCell>
+								<div className="overflow-x-auto">
+									<Table>
+										<TableHeader>
+											<TableRow>
+												<TableHead>Name</TableHead>
+												<TableHead>Role</TableHead>
+												<TableHead>Email</TableHead>
+												<TableHead>User ID</TableHead>
+												<TableHead>Created</TableHead>
+												<TableHead className="text-right">
+													Actions
+												</TableHead>
 											</TableRow>
-										))}
-									</TableBody>
-								</Table>
+										</TableHeader>
+										<TableBody>
+											{paginatedUsers.map((user: any) => (
+												<TableRow
+													key={user._id}
+													className="hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition">
+													<TableCell className="font-semibold">
+														{user.name}
+													</TableCell>
+													<TableCell>
+														<Badge
+															className={
+																getRoleColor(user.role) +
+																" px-3 py-1 rounded-full text-xs"
+															}>
+															{user.role.charAt(0).toUpperCase() +
+																user.role.slice(1)}
+														</Badge>
+													</TableCell>
+													<TableCell>{user.email}</TableCell>
+													<TableCell>
+														<span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">
+															{user._id.slice(-8)}
+														</span>
+													</TableCell>
+													<TableCell>
+														{format(
+															new Date(user.createdAt),
+															"MMM d, yyyy",
+														)}
+													</TableCell>
+													<TableCell className="text-right">
+														<DropdownMenu>
+															<DropdownMenuTrigger asChild>
+																<Button
+																	variant="ghost"
+																	size="icon"
+																	className="hover:bg-gray-100 dark:hover:bg-gray-800">
+																	<MoreVertical className="h-5 w-5" />
+																</Button>
+															</DropdownMenuTrigger>
+															<DropdownMenuContent align="end">
+																<DropdownMenuItem
+																	onClick={() =>
+																		handleEditUser(user)
+																	}>
+																	<Edit className="h-4 w-4 mr-2" />
+																	Edit User
+																</DropdownMenuItem>
+																<DropdownMenuItem
+																	onClick={() =>
+																		handleDeleteUserClick(user)
+																	}
+																	className="text-red-600">
+																	<Trash2 className="h-4 w-4 mr-2" />
+																	Delete User
+																</DropdownMenuItem>
+															</DropdownMenuContent>
+														</DropdownMenu>
+													</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</div>
 							)}
 							<PaginationControls
 								currentPage={userPage}
@@ -362,17 +386,18 @@ const AccountsPage = () => {
 
 				{/* STUDENTS TABLE */}
 				<TabsContent value="students">
-					<Card className="dark:bg-gray-800 bg-gray-100">
-						<CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-							<CardTitle>Students</CardTitle>
+					<Card className="dark:bg-gray-900 bg-white shadow-lg p-4">
+						<CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-gray-200 dark:border-gray-800">
+							<CardTitle className="text-xl font-bold">Students</CardTitle>
 							<div className="flex gap-4 w-full md:w-auto flex-col md:flex-row">
 								<Input
 									placeholder="Search name or email..."
 									value={studentSearch}
 									onChange={(e) => setStudentSearch(e.target.value)}
+									className="rounded-lg border-gray-300 dark:border-gray-700"
 								/>
 								<Select onValueChange={setSelectedStrand} value={selectedStrand}>
-									<SelectTrigger className="w-full md:w-[180px]">
+									<SelectTrigger className="w-full md:w-[180px] rounded-lg border-gray-300 dark:border-gray-700">
 										<SelectValue placeholder="Filter by strand" />
 									</SelectTrigger>
 									<SelectContent>
@@ -385,52 +410,65 @@ const AccountsPage = () => {
 								</Select>
 							</div>
 						</CardHeader>
-						<CardContent>
+						<CardContent className="p-0">
 							{paginatedStudents.length === 0 ? (
-								<div className="text-center py-8 text-gray-50 dark:bg-blue-900/10">
-									<GraduationCap className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-									<p>No students found.</p>
+								<div className="text-center py-12 text-gray-400 dark:bg-blue-900/10">
+									<GraduationCap className="h-14 w-14 mx-auto mb-4 text-gray-300" />
+									<p className="text-lg">No students found.</p>
 								</div>
 							) : (
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>Name</TableHead>
-											<TableHead>Email</TableHead>
-											<TableHead>Student ID</TableHead>
-											<TableHead>Grade & Section</TableHead>
-											<TableHead>Strand</TableHead>
-											<TableHead>Created</TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{paginatedStudents.map((student) => (
-											<TableRow key={student._id}>
-												<TableCell className="font-medium">
-													{student.firstName} {student.middleName}{" "}
-													{student.lastName}
-												</TableCell>
-												<TableCell>{student.email}</TableCell>
-												<TableCell>{student.studentId}</TableCell>
-												<TableCell>
-													{student.gradeLevel} - {student.section}
-												</TableCell>
-												<TableCell>
-													<Badge
-														className={getStrandColor(student.strand)}>
-														{student.strand ? student.strand : "N/A"}
-													</Badge>
-												</TableCell>
-												<TableCell>
-													{format(
-														new Date(student.createdAt),
-														"MMM d, yyyy",
-													)}
-												</TableCell>
+								<div className="overflow-x-auto">
+									<Table>
+										<TableHeader>
+											<TableRow>
+												<TableHead>Name</TableHead>
+												<TableHead>Email</TableHead>
+												<TableHead>Student ID</TableHead>
+												<TableHead>Grade & Section</TableHead>
+												<TableHead>Strand</TableHead>
+												<TableHead>Created</TableHead>
 											</TableRow>
-										))}
-									</TableBody>
-								</Table>
+										</TableHeader>
+										<TableBody>
+											{paginatedStudents.map((student) => (
+												<TableRow
+													key={student._id}
+													className="hover:bg-green-50/40 dark:hover:bg-green-900/10 transition">
+													<TableCell className="font-semibold">
+														{student.firstName} {student.middleName}{" "}
+														{student.lastName}
+													</TableCell>
+													<TableCell>{student.email}</TableCell>
+													<TableCell>
+														<span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">
+															{student.studentId}
+														</span>
+													</TableCell>
+													<TableCell>
+														{student.gradeLevel} - {student.section}
+													</TableCell>
+													<TableCell>
+														<Badge
+															className={
+																getStrandColor(student.strand) +
+																" px-3 py-1 rounded-full text-xs"
+															}>
+															{student.strand
+																? student.strand
+																: "N/A"}
+														</Badge>
+													</TableCell>
+													<TableCell>
+														{format(
+															new Date(student.createdAt),
+															"MMM d, yyyy",
+														)}
+													</TableCell>
+												</TableRow>
+											))}
+										</TableBody>
+									</Table>
+								</div>
 							)}
 						</CardContent>
 					</Card>

@@ -23,6 +23,7 @@ import { useAttendance } from "@/hooks/use-attendance";
 import { useStudent } from "@/hooks/use-student";
 import { toast } from "sonner";
 import type { StudentModel, StudentRemarks } from "@/models/student-model";
+import type { AttendanceModel } from "@/models/attendance-model";
 
 const AttendanceList = () => {
 	const { getToday } = useAttendance();
@@ -38,15 +39,28 @@ const AttendanceList = () => {
 	const ITEMS_PER_PAGE = 10;
 
 	const attendanceMap = useMemo(() => {
-		const map = new Map<string, string>();
-		todayData.records.forEach((rec) => map.set(rec.studentId, "Present"));
+		const map = new Map<string, AttendanceModel>();
+		todayData.records.forEach((rec) => {
+			if (rec.studentId && typeof rec.studentId === "object") {
+				map.set(rec.studentId._id, rec);
+			}
+		});
 		return map;
 	}, [todayData.records]);
 
 	const enrichedData = useMemo(() => {
 		return students.map((student) => {
-			const status = attendanceMap.get(student._id) ?? "Absent";
-			const attendance = todayData.records.find((r) => r.studentId === student._id);
+			const attendance = attendanceMap.get(student._id);
+			let status: string;
+
+			if (!attendance || attendance.attendanceStatus === undefined) {
+				status = "No Status";
+			} else if (attendance.attendanceStatus === "present") {
+				status = "Present";
+			} else {
+				status = "Absent";
+			}
+
 			return {
 				...student,
 				status,
@@ -54,7 +68,7 @@ const AttendanceList = () => {
 				date: format(new Date(), "MMM dd, yyyy"),
 			};
 		});
-	}, [students, attendanceMap, todayData.records]);
+	}, [students, attendanceMap]);
 
 	const filteredData = useMemo(() => {
 		const filtered = enrichedData.filter((item) => {
@@ -229,7 +243,9 @@ const AttendanceList = () => {
 											className={
 												item.status === "Present"
 													? "bg-green-100 text-green-800"
-													: "bg-red-100 text-red-800"
+													: item.status === "Absent"
+														? "bg-red-100 text-red-800"
+														: "bg-gray-200 text-gray-700"
 											}>
 											{item.status}
 										</Badge>
