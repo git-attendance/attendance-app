@@ -8,11 +8,14 @@ import { useAuth } from "@/contexts/auth-context";
 import { useAttendance } from "@/hooks/use-attendance";
 import { formatDate } from "@/utils/common";
 import Avatar from "@/components/ui/avatar";
+import { useLiveAttendanceSync } from "@/hooks/live-attendance-sync";
 
 const Dashboard = () => {
 	const { user } = useAuth();
 	const { getToday } = useAttendance();
 	const { data: todaySummary } = getToday;
+
+	useLiveAttendanceSync();
 
 	const [dateTime, setDateTime] = useState(new Date());
 	const [currentPage, setCurrentPage] = useState(1);
