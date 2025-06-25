@@ -19,12 +19,18 @@ import { Label } from "@/components/ui/label";
 import type { SubjectModel } from "@/models/subject-model";
 import { useAttendance } from "@/hooks/use-attendance";
 import type { AttendanceModel } from "@/models/attendance-model";
+import Avatar from "@/components/ui/avatar";
+import { useLiveAttendanceSync } from "@/hooks/live-attendance-sync";
 
 const StudentAttendance = () => {
 	const { user } = useAuth();
 	const { process, getToday } = useAttendance();
+	const { data: todaySummary } = getToday;
 	const instructorSubjects = useSubjectsByInstructor(user?._id || "");
-	const todayRecords: AttendanceModel[] = getToday.data?.records ?? [];
+	const todayRecords: AttendanceModel[] = todaySummary?.records ?? [];
+
+	// Enable live attendance sync
+	useLiveAttendanceSync();
 
 	const videoRef = useRef<HTMLVideoElement>(null!) as React.RefObject<HTMLVideoElement>;
 	const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -100,8 +106,8 @@ const StudentAttendance = () => {
 	}, [selectedSubjectId, videoRef, canvasRef, process, stopCamera]);
 
 	const getTodayAttendance = () => {
-		if (!recognizedResult) return null;
-		return todayRecords.find((r: any) => r.studentId === recognizedResult.studentId);
+		if (!recognizedResult?.studentId?._id) return null;
+		return todayRecords.find((r: any) => r.studentId?._id === recognizedResult.studentId._id);
 	};
 
 	useEffect(() => {
@@ -110,14 +116,16 @@ const StudentAttendance = () => {
 
 	return (
 		<div className="space-y-6">
-			<header>
-				<h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-					Student Attendance
-				</h1>
-				<p className="text-gray-600 mt-2">
-					Use face recognition to mark attendance —{" "}
-					{format(new Date(), "EEEE, MMMM d, yyyy")}
-				</p>
+			<header className="flex justify-between items-start">
+				<div>
+					<h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+						Student Attendance
+					</h1>
+					<p className="text-gray-600 mt-2">
+						Use face recognition to mark attendance —{" "}
+						{format(new Date(), "EEEE, MMMM d, yyyy")}
+					</p>
+				</div>
 			</header>
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -204,19 +212,36 @@ const StudentAttendance = () => {
 
 						{/* Student Info */}
 						{recognizedResult && (
-							<div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-								<div className="flex items-center gap-3">
-									<div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-										<UserCheck className="h-6 w-6 text-green-600" />
-									</div>
-									<div>
-										<h3 className="font-semibold text-green-800">
-											Student ID: {recognizedResult.studentId}
+							<div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+								<div className="flex items-center gap-4">
+									<Avatar
+										src={recognizedResult.studentId?.image}
+										alt={`${recognizedResult.studentId?.firstName} ${recognizedResult.studentId?.lastName}`}
+										size="large"
+									/>
+									<div className="flex-1">
+										<h3 className="font-semibold text-green-800 dark:text-green-200 text-lg">
+											{recognizedResult.studentId?.firstName}{" "}
+											{recognizedResult.studentId?.lastName}
 										</h3>
-										<p className="text-sm text-green-600">
+										<p className="text-sm text-green-600 dark:text-green-400">
+											Student ID: {recognizedResult.studentId?.studentId}
+										</p>
+										<p className="text-sm text-green-600 dark:text-green-400">
+											{recognizedResult.studentId?.section}
+											{recognizedResult.studentId?.strand
+												? ` - ${recognizedResult.studentId?.strand}`
+												: ""}
+										</p>
+										<p className="text-xs text-green-500 dark:text-green-500 mt-1">
 											Confidence:{" "}
 											{(recognizedResult.confidence * 100).toFixed(1)}%
 										</p>
+									</div>
+									<div className="text-right">
+										<div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
+											<UserCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
+										</div>
 									</div>
 								</div>
 							</div>
@@ -235,30 +260,77 @@ const StudentAttendance = () => {
 						{recognizedResult ? (
 							(() => {
 								const attendance = getTodayAttendance();
+								const student = recognizedResult.studentId;
+
 								return attendance ? (
-									<div className="text-center p-4 bg-green-50 border border-green-200 rounded-lg">
-										<UserCheck className="h-8 w-8 text-green-600 mx-auto mb-2" />
-										<p className="font-medium text-green-800">
-											Already Checked In
-										</p>
-										<p className="text-sm text-green-600">
-											Time In:{" "}
-											{format(new Date(attendance.checkInTime), "h:mm aa")}
-										</p>
+									<div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+										<div className="flex items-center gap-4">
+											<Avatar
+												src={student?.image}
+												alt={`${student?.firstName} ${student?.lastName}`}
+												size="large"
+											/>
+											<div className="flex-1">
+												<p className="font-medium text-green-800 dark:text-green-200 text-lg">
+													✓ Already Checked In
+												</p>
+												<p className="text-sm text-green-600 dark:text-green-400">
+													Time:{" "}
+													{format(
+														new Date(attendance.checkInTime),
+														"h:mm aa",
+													)}
+												</p>
+												<p className="text-sm text-green-600 dark:text-green-400">
+													Status:{" "}
+													{attendance.attendanceStatus === "present"
+														? "Present"
+														: "Absent"}
+												</p>
+												{attendance.checkOutTime && (
+													<p className="text-sm text-green-600 dark:text-green-400">
+														Check Out:{" "}
+														{format(
+															new Date(attendance.checkOutTime),
+															"h:mm aa",
+														)}
+													</p>
+												)}
+											</div>
+											<div className="text-right">
+												<UserCheck className="h-8 w-8 text-green-600 dark:text-green-400" />
+											</div>
+										</div>
 									</div>
 								) : (
-									<div className="text-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-										<AlertCircle className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
-										<p className="font-medium text-yellow-800">
-											No Check-In Found
-										</p>
-										<p className="text-sm text-yellow-600">Please try again</p>
+									<div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+										<div className="flex items-center gap-4">
+											<Avatar
+												src={student?.image}
+												alt={`${student?.firstName} ${student?.lastName}`}
+												size="large"
+											/>
+											<div className="flex-1">
+												<p className="font-medium text-yellow-800 dark:text-yellow-200 text-lg">
+													Ready for Check-In
+												</p>
+												<p className="text-sm text-yellow-600 dark:text-yellow-400">
+													Student recognized successfully
+												</p>
+												<p className="text-sm text-yellow-600 dark:text-yellow-400">
+													Attendance will be recorded when you check in
+												</p>
+											</div>
+											<div className="text-right">
+												<AlertCircle className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+											</div>
+										</div>
 									</div>
 								);
 							})()
 						) : (
-							<div className="text-center py-8 text-gray-500">
-								<UserCheck className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+							<div className="text-center py-8 text-gray-500 dark:text-gray-400">
+								<UserCheck className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
 								<p>No student recognized yet.</p>
 								<p className="text-sm">Use the camera to recognize your face</p>
 							</div>

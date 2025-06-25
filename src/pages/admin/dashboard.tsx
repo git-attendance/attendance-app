@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { format } from "date-fns";
-import { UserCheck, CheckCircle, XCircle, Clock, UserMinus, Users } from "lucide-react";
+import { UserCheck, CheckCircle, XCircle, Users } from "lucide-react";
 
 import StatCard from "@/components/features/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,47 +31,42 @@ const Dashboard = () => {
 	const title = user.role === "teacher" ? "Teacher Dashboard" : "Admin Dashboard";
 
 	const todayAttendance = todaySummary?.records ?? [];
-	const today = new Date().toDateString();
 
 	// Filter today's attendance only (just in case)
 	const filteredTodayAttendance = useMemo(
 		() =>
 			todayAttendance.filter(
-				(record) => new Date(record.checkInTime).toDateString() === today,
+				(record) =>
+					new Date(record.checkInTime).toDateString() === new Date().toDateString(),
 			),
-		[todayAttendance, today],
+		[todayAttendance],
 	);
 
-	// Total students from unique student IDs
-	const totalStudents = useMemo(() => {
-		const uniqueIds = new Set(
-			filteredTodayAttendance.filter((r) => r.studentId).map((r) => r.studentId._id),
-		);
-		return uniqueIds.size;
-	}, [filteredTodayAttendance]);
+	// Total students from API response
+	const totalStudents = todaySummary?.total ?? 0;
 
-	const lateIn = useMemo(() => {
-		const threshold = new Date();
-		threshold.setHours(7, 30, 0, 0);
-		return filteredTodayAttendance.filter((record) => {
-			const checkIn = new Date(record.checkInTime);
-			return checkIn > threshold && record.attendanceStatus === "present";
-		}).length;
-	}, [filteredTodayAttendance]);
+	// const lateIn = useMemo(() => {
+	// 	const threshold = new Date();
+	// 	threshold.setHours(7, 30, 0, 0);
+	// 	return filteredTodayAttendance.filter((record) => {
+	// 		const checkIn = new Date(record.checkInTime);
+	// 		return checkIn > threshold && record.attendanceStatus === "present";
+	// 	}).length;
+	// }, [filteredTodayAttendance]);
 
 	// Excused logic from remarks inside studentId
-	const excused = useMemo(() => {
-		const remarks = [
-			"excuse",
-			"medical_appointment",
-			"family_emergency",
-			"official_business",
-			"suspension",
-		];
-		return filteredTodayAttendance.filter(
-			(r) => r.studentId?.remarks && remarks.includes(r.studentId.remarks),
-		).length;
-	}, [filteredTodayAttendance]);
+	// const excused = useMemo(() => {
+	// 	const remarks = [
+	// 		"excuse",
+	// 		"medical_appointment",
+	// 		"family_emergency",
+	// 		"official_business",
+	// 		"suspension",
+	// 	];
+	// 	return filteredTodayAttendance.filter(
+	// 		(r) => r.studentId?.remarks && remarks.includes(r.studentId.remarks),
+	// 	).length;
+	// }, [filteredTodayAttendance]);
 
 	const stats = [
 		{
@@ -86,35 +81,40 @@ const Dashboard = () => {
 			icon: CheckCircle,
 			changeType: "positive",
 		},
-		{
-			title: "Late In",
-			value: lateIn,
-			icon: Clock,
-			changeType: lateIn > 0 ? "negative" : "neutral",
-		},
+		// {
+		// 	title: "Late In",
+		// 	value: lateIn,
+		// 	icon: Clock,
+		// 	changeType: lateIn > 0 ? "negative" : "neutral",
+		// },
 		{
 			title: "Absent",
 			value: todaySummary?.absent ?? 0,
 			icon: XCircle,
 			changeType: (todaySummary?.absent ?? 0) > 0 ? "negative" : "neutral",
 		},
-		{
-			title: "Excused",
-			value: excused,
-			icon: UserMinus,
-			changeType: "neutral",
-		},
+		// {
+		// 	title: "Excused",
+		// 	value: excused,
+		// 	icon: UserMinus,
+		// 	changeType: "neutral",
+		// },
 	];
 
 	const paginatedAttendance = useMemo(() => {
-		const sorted = [...filteredTodayAttendance].sort(
+		// Use today's attendance records
+		const dataToUse =
+			filteredTodayAttendance.length > 0 ? filteredTodayAttendance : todayAttendance;
+		const sorted = [...dataToUse].sort(
 			(a, b) => new Date(b.checkInTime).getTime() - new Date(a.checkInTime).getTime(),
 		);
 		const startIndex = (currentPage - 1) * pageSize;
 		return sorted.slice(startIndex, startIndex + pageSize);
-	}, [filteredTodayAttendance, currentPage]);
+	}, [filteredTodayAttendance, todayAttendance, currentPage]);
 
-	const totalPages = Math.ceil(filteredTodayAttendance.length / pageSize);
+	const totalPages = Math.ceil(
+		Math.max(filteredTodayAttendance.length, todayAttendance.length) / pageSize,
+	);
 
 	return (
 		<div className="p-2 space-y-6">
@@ -135,7 +135,7 @@ const Dashboard = () => {
 			</div>
 
 			{/* Stat Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
 				{stats.map((stat, index) => (
 					<StatCard
 						key={index}
@@ -153,7 +153,7 @@ const Dashboard = () => {
 					<CardTitle>Recent Attendance Activity</CardTitle>
 				</CardHeader>
 				<CardContent>
-					{filteredTodayAttendance.length === 0 ? (
+					{todayAttendance.length === 0 && filteredTodayAttendance.length === 0 ? (
 						<div className="text-center py-8 text-gray-500">
 							<UserCheck className="h-12 w-12 mx-auto mb-4 text-gray-300" />
 							<p>No attendance records for today yet.</p>

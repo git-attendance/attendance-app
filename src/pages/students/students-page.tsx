@@ -34,8 +34,9 @@ const StudentsPage = () => {
 	const { getAll, remove } = useStudent();
 	const { data: students } = getAll();
 
-	const { getOverallStats } = useAttendance();
+	const { getOverallStats, getToday } = useAttendance();
 	const { data: stats, isLoading: statsLoading } = getOverallStats();
+	const { data: todayAttendance } = getToday;
 
 	const navigate = useNavigate();
 	const { user } = useAuth();
@@ -65,6 +66,38 @@ const StudentsPage = () => {
 			default:
 				return "bg-gray-100 text-gray-800";
 		}
+	};
+
+	// Get today's attendance status for a specific student
+	const getStudentTodayStatus = (studentId: string) => {
+		const attendanceRecord = todayAttendance?.records?.find(
+			(record) => record.studentId._id === studentId,
+		);
+
+		if (!attendanceRecord) {
+			return {
+				status: "absent",
+				label: "Absent",
+				color: "text-red-600 border-red-200 bg-red-50",
+				icon: UserX,
+			};
+		}
+
+		if (attendanceRecord.attendanceStatus === "present") {
+			return {
+				status: "present",
+				label: "Present",
+				color: "text-green-600 border-green-200 bg-green-50",
+				icon: UserCheck,
+			};
+		}
+
+		return {
+			status: "absent",
+			label: "Absent",
+			color: "text-red-600 border-red-200 bg-red-50",
+			icon: UserX,
+		};
 	};
 
 	const handleAddStudent = () => {
@@ -317,8 +350,20 @@ const StudentsPage = () => {
 													</Badge>
 												</TableCell>
 												<TableCell>
-													{/* Placeholder - Replace with real-time status if needed */}
-													No status yet
+													{(() => {
+														const status = getStudentTodayStatus(
+															student._id,
+														);
+														const Icon = status.icon;
+														return (
+															<Badge
+																variant="outline"
+																className={`${status.color} flex items-center gap-1`}>
+																<Icon className="h-3 w-3" />
+																{status.label}
+															</Badge>
+														);
+													})()}
 												</TableCell>
 												<TableCell className="text-sm text-gray-500">
 													{format(

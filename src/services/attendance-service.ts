@@ -18,33 +18,29 @@ export class AttendanceService extends APIService {
 		return res;
 	}
 
-	async getAttendanceHistory(
-		studentId: string,
-		subjectId?: string,
-		startDate?: Date,
-		endDate?: Date,
-	) {
+	async getAttendanceHistory(subjectId?: string, startDate?: Date, endDate?: Date) {
 		this.resetQuery();
 		let url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.ATTENDANCE.HISTORY}`;
 
 		// Add query parameters
 		const params = new URLSearchParams();
-		params.append("studentId", studentId);
 		if (subjectId) params.append("subjectId", subjectId);
 		if (startDate) params.append("startDate", startDate.toISOString());
 		if (endDate) params.append("endDate", endDate.toISOString());
 
-		url += `?${params.toString()}`;
+		if (params.toString()) {
+			url += `?${params.toString()}`;
+		}
 		return this.asyncFetch.get(url);
 	}
 
-	async getStudentStatus(studentId: string, subjectId: string, startDate?: Date, endDate?: Date) {
+	async getStudentStatus(userId: string, subjectId: string, startDate?: Date, endDate?: Date) {
 		this.resetQuery();
 		let url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.ATTENDANCE.STUDENT_STATUS}`;
 
 		// Add query parameters
 		const params = new URLSearchParams();
-		params.append("studentId", studentId);
+		params.append("userId", userId);
 		params.append("subjectId", subjectId);
 		if (startDate) params.append("startDate", startDate.toISOString());
 		if (endDate) params.append("endDate", endDate.toISOString());
@@ -53,31 +49,24 @@ export class AttendanceService extends APIService {
 		return this.asyncFetch.get(url);
 	}
 
-	async getSubjectStats(subjectId: string, startDate?: Date, endDate?: Date) {
+	async getSubjectStats(subjectId?: string, startDate?: Date, endDate?: Date) {
 		this.resetQuery();
-		let url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.ATTENDANCE.SUBJECT_STATS.replace(":subjectId", subjectId)}`;
+		let url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.ATTENDANCE.SUBJECT_STATS}`;
 
 		// Add query parameters
 		const params = new URLSearchParams();
+		if (subjectId) params.append("subjectId", subjectId);
 		if (startDate) params.append("startDate", startDate.toISOString());
 		if (endDate) params.append("endDate", endDate.toISOString());
 
-		url += `?${params.toString()}`;
+		if (params.toString()) {
+			url += `?${params.toString()}`;
+		}
 		return this.asyncFetch.get(url);
 	}
 
-	async getSubjectStudentsStatus(subjectId: string, startDate?: Date, endDate?: Date) {
-		this.resetQuery();
-		let url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.ATTENDANCE.SUBJECT_STUDENTS_STATUS.replace(":subjectId", subjectId)}`;
-
-		// Add query parameters
-		const params = new URLSearchParams();
-		if (startDate) params.append("startDate", startDate.toISOString());
-		if (endDate) params.append("endDate", endDate.toISOString());
-
-		url += `?${params.toString()}`;
-		return this.asyncFetch.get(url);
-	}
+	// Note: getSubjectStudentsStatus has been removed from the API
+	// Use getSubjectStats or getOverallStats with appropriate filters instead
 
 	async processAttendance(photo: File, subjectId: string) {
 		const url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.ATTENDANCE.PROCESS}`;
@@ -120,9 +109,52 @@ export class AttendanceService extends APIService {
 			if (filters.startDate) params.append("startDate", filters.startDate.toISOString());
 			if (filters.endDate) params.append("endDate", filters.endDate.toISOString());
 
-			url += `?${params.toString()}`;
+			if (params.toString()) {
+				url += `?${params.toString()}`;
+			}
 		}
 
 		return this.asyncFetch.get(url);
+	}
+
+	async exportAttendanceCSV(subjectId?: string) {
+		this.resetQuery();
+		let url = `${API_ENDPOINTS.BASEURL}${API_ENDPOINTS.ATTENDANCE.EXPORT_CSV}`;
+
+		// Add query parameters
+		if (subjectId) {
+			const params = new URLSearchParams();
+			params.append("subjectId", subjectId);
+			url += `?${params.toString()}`;
+		}
+
+		// Handle CSV response manually since it's not JSON
+		const auth = localStorage.getItem("auth");
+		const authData = auth ? JSON.parse(auth) : null;
+
+		const headers: Record<string, string> = authData
+			? { Authorization: `Bearer ${authData.token}` }
+			: {};
+
+		const response = await fetch(url, {
+			method: "GET",
+			headers,
+		});
+
+		if (!response.ok) {
+			let errorBody = null;
+			try {
+				errorBody = await response.json();
+			} catch (_) {
+				errorBody = { message: "Unknown error" };
+			}
+			throw {
+				status: response.status,
+				response: errorBody,
+			};
+		}
+
+		// Return the CSV text directly
+		return await response.text();
 	}
 }

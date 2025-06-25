@@ -36,12 +36,10 @@ export function useAttendance() {
 	});
 
 	// Get attendance history
-	const getHistory = (studentId: string, subjectId?: string, startDate?: Date, endDate?: Date) =>
+	const getHistory = (subjectId?: string, startDate?: Date, endDate?: Date) =>
 		useQuery({
-			queryKey: ["attendance", "history", studentId, subjectId, startDate, endDate],
-			queryFn: () =>
-				attendanceService.getAttendanceHistory(studentId, subjectId, startDate, endDate),
-			enabled: !!studentId,
+			queryKey: ["attendance", "history", subjectId, startDate, endDate],
+			queryFn: () => attendanceService.getAttendanceHistory(subjectId, startDate, endDate),
 		});
 
 	// Get student subject status
@@ -59,21 +57,21 @@ export function useAttendance() {
 		});
 
 	// Get subject stats
-	const getSubjectStats = (subjectId: string, startDate?: Date, endDate?: Date) =>
+	const getSubjectStats = (subjectId?: string, startDate?: Date, endDate?: Date) =>
 		useQuery({
 			queryKey: ["attendance", "subject-stats", subjectId, startDate, endDate],
 			queryFn: () => attendanceService.getSubjectStats(subjectId, startDate, endDate),
-			enabled: !!subjectId,
 		});
 
+	// Note: getSubjectStudentsStatus has been deprecated - use getSubjectStats or getOverallStats instead
 	// Get all student statuses in subject
-	const getSubjectStudentsStatus = (subjectId: string, startDate?: Date, endDate?: Date) =>
-		useQuery({
-			queryKey: ["attendance", "students-status", subjectId, startDate, endDate],
-			queryFn: () =>
-				attendanceService.getSubjectStudentsStatus(subjectId, startDate, endDate),
-			enabled: !!subjectId,
-		});
+	// const getSubjectStudentsStatus = (subjectId: string, startDate?: Date, endDate?: Date) =>
+	// 	useQuery({
+	// 		queryKey: ["attendance", "students-status", subjectId, startDate, endDate],
+	// 		queryFn: () =>
+	// 			attendanceService.getSubjectStudentsStatus(subjectId, startDate, endDate),
+	// 		enabled: !!subjectId,
+	// 	});
 
 	// Test SMS
 	const testSMS = useMutation({
@@ -98,18 +96,26 @@ export function useAttendance() {
 			queryFn: () => attendanceService.getOverallStats(filters),
 		});
 
+	// Export attendance to CSV
+	const exportCSV = useMutation({
+		mutationFn: (subjectId?: string) => attendanceService.exportAttendanceCSV(subjectId),
+		onError: (err: any) => {
+			toast.error(err?.error?.message || "Failed to export attendance");
+		},
+	});
+
 	return {
 		// Queries
 		getToday,
 		getHistory,
 		getStudentStatus,
 		getSubjectStats,
-		getSubjectStudentsStatus,
 		getOverallStats,
 
 		// Mutations
 		enrollFace,
 		process,
 		testSMS,
+		exportCSV,
 	};
 }

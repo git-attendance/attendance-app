@@ -29,7 +29,10 @@ export const useCamera = ({ onError }: UseCameraProps = {}) => {
 					label: device.label || `Camera ${index + 1}`,
 				}));
 
-			console.log("Available cameras:", videoDevices);
+			// Only log if devices actually changed
+			if (JSON.stringify(videoDevices) !== JSON.stringify(devices)) {
+				console.log("Available cameras:", videoDevices);
+			}
 			setDevices(videoDevices);
 
 			// Set default to first device if none selected
