@@ -24,6 +24,8 @@ import { useAuth } from "@/contexts/auth-context";
 import { eventTypeConfig, type EventTypeMeta } from "@/configs/event-types";
 import { YearView } from "./year-view";
 import { TeacherSelector } from "../features/user-selector";
+import { useUsers } from "@/hooks/use-user";
+import type { UserModel } from "@/models/user-model";
 
 export const CalendarTemplate = () => {
 	const [currentDate, setCurrentDate] = useState(new Date());
@@ -33,7 +35,14 @@ export const CalendarTemplate = () => {
 	const [editingEvent, setEditingEvent] = useState<EventModel | null>(null);
 	const [eventToDelete, setEventToDelete] = useState<EventModel | null>(null);
 
+	const { data: allUsers = [] } = useUsers();
+
+	const teacherIds = useMemo(() => {
+		return allUsers.filter((u: UserModel) => u.role === "teacher").map((u: UserModel) => u._id);
+	}, [allUsers]);
+
 	const { user } = useAuth();
+	console.log("Current user:", user);
 	const { data: events = [] } = useEvents("");
 
 	const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(
@@ -133,15 +142,23 @@ export const CalendarTemplate = () => {
 		setIsCreateModalOpen(true);
 	};
 
-	// Filter events by selectedTeacherId if admin
 	const filteredEvents = useMemo(() => {
-		if (user?.role === "admin") {
-			if (!selectedTeacherId) return events; // show all
+		if (!user) return [];
+
+		if (user.role === "admin") {
+			if (!selectedTeacherId) return events;
 			return events.filter((e) => e.organizerId === selectedTeacherId);
 		}
-		// non-admins: only their own events
-		return events.filter((e) => e.organizerId === user?._id);
-	}, [events, user, selectedTeacherId]);
+
+		if (user.role === "teacher") {
+			// See own events + events not created by any other teacher (assumed to be admin)
+			return events.filter(
+				(e) => e.organizerId === user._id || !teacherIds.includes(e.organizerId),
+			);
+		}
+
+		return [];
+	}, [events, user, selectedTeacherId, teacherIds]);
 
 	const selectedDateEvents = useMemo(
 		() => getEventsForDate(selectedDate, filteredEvents),
