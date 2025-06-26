@@ -229,7 +229,7 @@ const StudentsPage = () => {
 							<UserCheck className="h-8 w-8 text-green-600" />
 							<div className="ml-4">
 								<p className="text-sm font-medium text-gray-600 dark:text-white">
-									Present Today
+									Total Present
 								</p>
 								<p className="text-2xl font-bold text-gray-900 dark:text-white">
 									{statsLoading ? "..." : (stats?.totalPresent ?? 0)}
@@ -245,7 +245,7 @@ const StudentsPage = () => {
 							<UserX className="h-8 w-8 text-red-600" />
 							<div className="ml-4">
 								<p className="text-sm font-medium text-gray-600 dark:text-white">
-									Absent Today
+									Total Absent
 								</p>
 								<p className="text-2xl font-bold text-gray-900 dark:text-white">
 									{statsLoading ? "..." : (stats?.totalAbsent ?? 0)}
