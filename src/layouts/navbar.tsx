@@ -1,7 +1,7 @@
 import Avatar from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "@/providers/theme-provider";
-import { Bell, Menu, Moon, Sun } from "lucide-react";
+import { Menu, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -47,10 +47,10 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
 						)}
 					</button>
 
-					<button className="relative rounded-full p-1.5 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700">
+					{/* <button className="relative rounded-full p-1.5 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700">
 						<Bell className="h-5 w-5" />
 						<span className="absolute right-1 top-1.5 h-2 w-2 rounded-full bg-danger-500"></span>
-					</button>
+					</button> */}
 
 					<div className="relative">
 						<button

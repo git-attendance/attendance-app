@@ -37,10 +37,7 @@ export const StudentFilters = ({
 						onChange={(e) => onGradeChange(e.target.value)}
 						className="px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900">
 						<option value="all">All Grades</option>
-						<option value="7">Grade 7</option>
-						<option value="8">Grade 8</option>
-						<option value="9">Grade 9</option>
-						<option value="10">Grade 10</option>
+
 						<option value="11">Grade 11</option>
 						<option value="12">Grade 12</option>
 					</select>
