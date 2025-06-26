@@ -21,6 +21,7 @@ import { useAttendance } from "@/hooks/use-attendance";
 import type { AttendanceModel } from "@/models/attendance-model";
 import Avatar from "@/components/ui/avatar";
 import { useLiveAttendanceSync } from "@/hooks/live-attendance-sync";
+import { useQueryClient } from "@tanstack/react-query";
 
 const StudentAttendance = () => {
 	const { user } = useAuth();
@@ -28,6 +29,7 @@ const StudentAttendance = () => {
 	const { data: todaySummary } = getToday;
 	const instructorSubjects = useSubjectsByInstructor(user?._id || "");
 	const todayRecords: AttendanceModel[] = todaySummary?.records ?? [];
+	const queryClient = useQueryClient();
 
 	// Enable live attendance sync
 	useLiveAttendanceSync();
@@ -91,6 +93,74 @@ const StudentAttendance = () => {
 					onSuccess: (res) => {
 						setRecognizedResult(res.data);
 						toast.success(res.message || "Attendance recorded.");
+
+						// Optimistically update the cache with the new attendance record
+						try {
+							queryClient.setQueryData(["attendance", "today"], (oldData: any) => {
+								if (!oldData || !res.data) return oldData;
+
+								// Safely access response data with fallbacks
+								const responseData = res.data;
+
+								// Only proceed if we have the minimum required data
+								if (!responseData.studentId?._id) {
+									console.warn(
+										"Insufficient data for optimistic update:",
+										responseData,
+									);
+									return oldData;
+								}
+
+								// Create new attendance record from the response
+								const newRecord = {
+									_id: responseData._id || `temp-${Date.now()}`,
+									studentId: responseData.studentId,
+									subjectId: responseData.subjectId,
+									attendanceStatus: responseData.attendanceStatus || "present",
+									checkInTime:
+										responseData.checkInTime || new Date().toISOString(),
+									checkOutTime: responseData.checkOutTime,
+									personId: responseData.personId,
+									status: responseData.status || "checked-in",
+									confidence: responseData.confidence,
+									createdAt: responseData.createdAt || new Date().toISOString(),
+									updatedAt: responseData.updatedAt || new Date().toISOString(),
+								};
+
+								// Check if record already exists to avoid duplicates
+								const existingRecordIndex = oldData.records?.findIndex(
+									(record: any) =>
+										record.studentId?._id === newRecord.studentId?._id,
+								);
+
+								if (existingRecordIndex >= 0) {
+									// Update existing record
+									const updatedRecords = [...(oldData.records || [])];
+									updatedRecords[existingRecordIndex] = newRecord;
+									return {
+										...oldData,
+										records: updatedRecords,
+									};
+								} else {
+									// Add new record
+									return {
+										...oldData,
+										records: [...(oldData.records || []), newRecord],
+										total: (oldData.total || 0) + 1,
+										present: (oldData.present || 0) + 1,
+									};
+								}
+							});
+						} catch (error) {
+							console.error("Error in optimistic update:", error);
+							// Continue execution even if optimistic update fails
+						}
+
+						// Also refetch to ensure data consistency
+						setTimeout(() => {
+							getToday.refetch();
+						}, 500);
+
 						stopCamera();
 					},
 					onError: (err) => {
@@ -107,7 +177,12 @@ const StudentAttendance = () => {
 
 	const getTodayAttendance = () => {
 		if (!recognizedResult?.studentId?._id) return null;
-		return todayRecords.find((r: any) => r.studentId?._id === recognizedResult.studentId._id);
+
+		const found = todayRecords.find((r: any) => {
+			return r.studentId?._id === recognizedResult.studentId._id;
+		});
+
+		return found;
 	};
 
 	useEffect(() => {
@@ -328,6 +403,49 @@ const StudentAttendance = () => {
 									</div>
 								);
 							})()
+						) : todayRecords && todayRecords.length > 0 ? (
+							<div className="space-y-3">
+								<p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+									Today's Records ({todayRecords.length})
+								</p>
+								{todayRecords.map((record: any, index: number) => {
+									const student = record.studentId;
+									return (
+										<div
+											key={record._id || index}
+											className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+											<div className="flex items-center gap-3">
+												<Avatar
+													src={student?.image}
+													alt={`${student?.firstName} ${student?.lastName}`}
+													size="medium"
+												/>
+												<div className="flex-1">
+													<p className="font-medium text-green-800 dark:text-green-200">
+														{student?.firstName} {student?.lastName}
+													</p>
+													<p className="text-sm text-green-600 dark:text-green-400">
+														{student?.section}
+														{student?.strand
+															? ` - ${student?.strand}`
+															: ""}
+													</p>
+													<p className="text-xs text-green-500 dark:text-green-500">
+														{format(
+															new Date(record.checkInTime),
+															"h:mm aa",
+														)}{" "}
+														- {record.attendanceStatus}
+													</p>
+												</div>
+												<div className="text-right">
+													<UserCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
+												</div>
+											</div>
+										</div>
+									);
+								})}
+							</div>
 						) : (
 							<div className="text-center py-8 text-gray-500 dark:text-gray-400">
 								<UserCheck className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
