@@ -71,7 +71,7 @@ const StudentsPage = () => {
 	// Get today's attendance status for a specific student
 	const getStudentTodayStatus = (studentId: string) => {
 		const attendanceRecord = todayAttendance?.records?.find(
-			(record) => record.studentId._id === studentId,
+			(record) => record.studentId?._id === studentId,
 		);
 
 		if (!attendanceRecord) {
