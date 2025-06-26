@@ -39,9 +39,31 @@ const AttendanceList = () => {
 	const enrichedData = useMemo(() => {
 		return todayData.records.map((record) => {
 			const student = record.studentId;
+
+			// Handle deleted students (null studentId)
+			if (!student) {
+				return {
+					_id: `deleted-${Math.random()}`, // Generate a unique ID for deleted students
+					studentId: "N/A",
+					firstName: "[Deleted",
+					lastName: "Student]",
+					gradeLevel: "N/A",
+					section: "N/A",
+					strand: "N/A",
+					remarks: "Student record deleted",
+					status: record.attendanceStatus === "present" ? "Present" : "Absent",
+					timeIn: record.checkInTime
+						? format(new Date(record.checkInTime), "HH:mm")
+						: "-",
+					date: format(new Date(), "MMM dd, yyyy"),
+					isDeleted: true, // Flag to identify deleted students
+				};
+			}
+
+			// Handle normal students
 			return {
 				_id: student._id,
-				studentId: student.studentId,
+				studentId: student.studentId || student._id || "No ID", // Fallback to _id if studentId is missing
 				firstName: student.firstName,
 				lastName: student.lastName,
 				gradeLevel: student.gradeLevel,
@@ -51,6 +73,7 @@ const AttendanceList = () => {
 				status: record.attendanceStatus === "present" ? "Present" : "Absent",
 				timeIn: record.checkInTime ? format(new Date(record.checkInTime), "HH:mm") : "-",
 				date: format(new Date(), "MMM dd, yyyy"),
+				isDeleted: false,
 			};
 		});
 	}, [todayData.records]);
@@ -226,10 +249,21 @@ const AttendanceList = () => {
 						</TableHeader>
 						<TableBody>
 							{paginatedData.map((item) => (
-								<TableRow key={item._id}>
+								<TableRow
+									key={item._id}
+									className={
+										item.isDeleted
+											? "opacity-60 bg-gray-50 dark:bg-gray-900"
+											: ""
+									}>
 									<TableCell>{item.studentId}</TableCell>
 									<TableCell>
-										{item.firstName} {item.lastName}
+										<span
+											className={
+												item.isDeleted ? "italic text-gray-500" : ""
+											}>
+											{item.firstName} {item.lastName}
+										</span>
 									</TableCell>
 									<TableCell>{item.gradeLevel}</TableCell>
 									<TableCell>{item.section}</TableCell>
@@ -249,7 +283,11 @@ const AttendanceList = () => {
 									<TableCell>{item.timeIn}</TableCell>
 									<TableCell>{item.date}</TableCell>
 									<TableCell>
-										{editingId === item._id ? (
+										{item.isDeleted ? (
+											<span className="text-gray-500 italic">
+												{item.remarks}
+											</span>
+										) : editingId === item._id ? (
 											<div className="flex items-center gap-2">
 												<Select
 													value={item.remarks}
