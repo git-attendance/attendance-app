@@ -55,6 +55,9 @@ const AttendanceList = () => {
 					timeIn: record.checkInTime
 						? format(new Date(record.checkInTime), "HH:mm")
 						: "-",
+					timeOut: record.checkOutTime
+						? format(new Date(record.checkOutTime), "HH:mm")
+						: "-",
 					date: format(new Date(), "MMM dd, yyyy"),
 					isDeleted: true, // Flag to identify deleted students
 				};
@@ -72,6 +75,7 @@ const AttendanceList = () => {
 				remarks: student.remarks || "none",
 				status: record.attendanceStatus === "present" ? "Present" : "Absent",
 				timeIn: record.checkInTime ? format(new Date(record.checkInTime), "HH:mm") : "-",
+				timeOut: record.checkOutTime ? format(new Date(record.checkOutTime), "HH:mm") : "-",
 				date: format(new Date(), "MMM dd, yyyy"),
 				isDeleted: false,
 			};
@@ -243,6 +247,7 @@ const AttendanceList = () => {
 								<TableHead>Strand</TableHead>
 								<TableHead>Status</TableHead>
 								<TableHead>Time In</TableHead>
+								<TableHead>Time Out</TableHead>
 								<TableHead>Date</TableHead>
 								<TableHead>Remarks</TableHead>
 							</TableRow>
@@ -281,6 +286,7 @@ const AttendanceList = () => {
 										</Badge>
 									</TableCell>
 									<TableCell>{item.timeIn}</TableCell>
+									<TableCell>{item.timeOut}</TableCell>
 									<TableCell>{item.date}</TableCell>
 									<TableCell>
 										{item.isDeleted ? (
